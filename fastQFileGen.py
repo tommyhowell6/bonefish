@@ -28,14 +28,14 @@ def makePairedReads(output, DNALength, kLength, gap):
     x = 0
     while (x < len(DNA) + 1 - readLength):
         readId = str(uuid.uuid4())
-        print("@" + readId + "_1")
-        print(DNA[x:x+int(kMerLength)])
-        print("+")
-        print("this line is the quality of the read")
-        print("@" + readId + "_2")
-        print(DNA[x+int(kMerLength)+int(gap):x+int(kMerLength)+int(gap)+int(kMerLength)])
-        print("+")
-        print("this line is the quality of the read")
+        output.write("@" + readId + "_1" + "\n")
+        output.write(DNA[x:x+int(kMerLength)] + "\n")
+        output.write("+" + "\n")
+        output.write("this line is the quality of the read" + "\n")
+        output.write("@" + readId + "_2" + "\n")
+        output.write(DNA[x+int(kMerLength)+int(gap):x+int(kMerLength)+int(gap)+int(kMerLength)] + "\n")
+        output.write("+" + "\n")
+        output.write("this line is the quality of the read" + "\n")
         x += 1
     
 #main
