@@ -9,20 +9,166 @@ import java.util.*;
 /**
  * Created by Jesse on 10/12/2017.
  */
-//TODO: to implement step 3, we need to bring in the code from lab 12's redo. Then implement that with the DoubleStrings (could convert those back into single Strings).
-    //TODO: 4, 5, and 6 will have to be my own code, but it actually shouldn't be too bad. So long as I have a map to each node.
 public class main {
 
     public static TreeMap<DoubleString, ArrayList<DoubleStringAndBool>> theEdgesMap = new TreeMap<>();
     public static ArrayList<DoubleString> formCycleList = new ArrayList<>();
+
+
+    public static TreeMap<String, PairedReadsInfo> readFastq(String filename)
+    {
+        TreeMap<String, PairedReadsInfo> allPairs = new TreeMap<>();
+
+
+        Scanner fileScanner = null;
+        try {
+            fileScanner = new Scanner(new File(filename));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        while (fileScanner.hasNextLine()){ //iterate through and grab the ID, genome, the '+' character, and the accuracy
+            String id = fileScanner.nextLine();
+            String genome = fileScanner.nextLine();
+            String filler = fileScanner.nextLine();
+            String accuracy = fileScanner.nextLine();
+
+            String[] idSplit = id.split("_");
+            if(allPairs.containsKey(idSplit[0])) //if a read with this ID is already in the program:
+            {
+                allPairs.get(idSplit[0]).setString2(genome);
+            }
+            else
+            {
+                PairedReadsInfo newPair = new PairedReadsInfo();
+                newPair.setString1(genome);
+                newPair.setAccuracy(accuracy);
+                allPairs.put(idSplit[0], newPair);
+            }
+
+            //associations.add(st);
+        }
+
+        return allPairs;
+    }
+
+
+    public static TreeMap<String, PairedReadsInfo> readFastqTwoFiles(String filename, String filename2)
+    {
+        TreeMap<String, PairedReadsInfo> allPairs = new TreeMap<>();
+
+
+        Scanner fileScanner = null;
+        try {
+            fileScanner = new Scanner(new File(filename));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        while (fileScanner.hasNextLine()){ //iterate through and grab the ID, genome, the '+' character, and the accuracy
+            String id = fileScanner.nextLine();
+            String genome = fileScanner.nextLine();
+            String filler = fileScanner.nextLine();
+            String accuracy = fileScanner.nextLine();
+
+            String[] idSplit = id.split("_");
+            if(allPairs.containsKey(idSplit[0])) //if a read with this ID is already in the program:
+            {
+                allPairs.get(idSplit[0]).setString2(genome);
+            }
+            else
+            {
+                PairedReadsInfo newPair = new PairedReadsInfo();
+                newPair.setString1(genome);
+                newPair.setAccuracy(accuracy);
+                allPairs.put(idSplit[0], newPair);
+            }
+
+            //associations.add(st);
+        }
+
+        try {
+            fileScanner = new Scanner(new File(filename2));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        while (fileScanner.hasNextLine()){ //iterate through and grab the ID, genome, the '+' character, and the accuracy
+            String id = fileScanner.nextLine();
+            String genome = fileScanner.nextLine();
+            String filler = fileScanner.nextLine();
+            String accuracy = fileScanner.nextLine();
+
+            String[] idSplit = id.split("_");
+            if(allPairs.containsKey(idSplit[0])) //if a read with this ID is already in the program:
+            {
+                allPairs.get(idSplit[0]).setString2(genome);
+            }
+            else
+            {
+                PairedReadsInfo newPair = new PairedReadsInfo();
+                newPair.setString1(genome);
+                newPair.setAccuracy(accuracy);
+                allPairs.put(idSplit[0], newPair);
+            }
+
+        }
+
+        return allPairs;
+    }
+
+
+    public static ArrayList<String> returnRosalindFormattedStrings(String filename) {
+        ArrayList<String> associations = new ArrayList<>();
+        TreeMap<String, PairedReadsInfo> thePairs = readFastq(filename);
+        for (Map.Entry<String, PairedReadsInfo> pair : thePairs.entrySet()) {
+            String combinedAssociations = pair.getValue().getString1() + "|" + pair.getValue().getString2();
+
+            associations.add(combinedAssociations);
+
+        }
+        return associations;
+    }
+
+    public static ArrayList<String> returnStringsFromTwoFiles(String filename, String filename2) {
+        ArrayList<String> associations = new ArrayList<>();
+        TreeMap<String, PairedReadsInfo> thePairs = readFastqTwoFiles(filename, filename2);
+        for (Map.Entry<String, PairedReadsInfo> pair : thePairs.entrySet()) {
+            String combinedAssociations = pair.getValue().getString1() + "|" + pair.getValue().getString2();
+
+            associations.add(combinedAssociations);
+
+        }
+        return associations;
+    }
+
     public static void main(String[] args)
     {
         //read in the Strings and then just redo it cause it's way different
         ArrayList<String> associations = new ArrayList<>();
 
-        int k = 30;
-        int gap = 100;
+        int k = Integer.parseInt(args[0]);
+        int gap = Integer.parseInt(args[1]);
 
+        String firstFileName = args[2];
+        if(args.length > 3) //if there are 4 arguments, we're reading in 2 files
+        {
+            String secondFileName = args[3];
+            associations = returnStringsFromTwoFiles(firstFileName, secondFileName);
+        }
+        else
+        {
+            associations = returnRosalindFormattedStrings(firstFileName);
+        }
+//        int k = 4;
+//        int gap = 2;
+
+        //THIS IS FOR A FASTQ FILE, NOT ROSALIND FORMAT:
+        //ArrayList<String> associations = returnRosalindFormattedStrings("outfileRosalind.fastq");
+
+        //ArrayList<String> associations = returnStringsFromTwoFiles("first.fastq", "second.fastq");
+
+
+
+        /* //THIS IS FOR ROSALIND 15:
+        ArrayList<String> associations = new ArrayList<>();
         Scanner fileScanner = null;
         try {
             fileScanner = new Scanner(new File("ReadPairs.txt"));
@@ -33,7 +179,10 @@ public class main {
             String st = fileScanner.nextLine();
             st = st.replaceAll("\\s+",""); //remove whitespace
             associations.add(st);
-        }
+        }*/
+
+
+
 
 
         TreeMap<DoubleString, ArrayList<DoubleString>> mappedStrings = new TreeMap<>();
@@ -157,6 +306,7 @@ public class main {
             DoubleString newDouble = new DoubleString(string1.toString(), string2.toString());
             edges.add(newDouble);
         }
+
 
 
         StringBuilder finalString = new StringBuilder(""); //now we're iterating through the edges on our graph, building the assembled DNA
