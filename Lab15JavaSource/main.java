@@ -15,6 +15,58 @@ public class main {
     public static ArrayList<DoubleString> formCycleList = new ArrayList<>();
 
 
+
+    public static void main(String[] args)
+    {
+        //read in the Strings and then just redo it cause it's way different
+
+
+        int k = Integer.parseInt(args[0]);
+        int gap = Integer.parseInt(args[1]);
+
+        ArrayList<String> associations = formatFastqIntoRosalindPairs(args);
+
+
+        DoubleString startStrings = findStartString(k, associations);
+
+
+        Random r = new Random();
+
+        DoubleString rand = startStrings;
+        ArrayList<DoubleString> cycle;
+        cycle = formCycle(rand);
+        cycle = formRestOfCycle(r, rand, cycle);
+
+        ArrayList<DoubleString> cyclePattern;
+        cyclePattern = cycle;
+
+        ArrayList<DoubleString> edges = formEdgesBetweenNodes(cycle, cyclePattern);
+
+        StringBuilder finalString = combineEdgesIntoGenome(gap, edges);
+
+        printGenomeToFile(finalString);
+
+
+    }
+
+    //This prints out whatever string is given to it in a file called "ReconstructedOut.txt"
+    private static void printGenomeToFile(StringBuilder finalString) {
+        try{
+            PrintWriter writer = new PrintWriter("ReconstructedOut.txt", "UTF-8");
+
+
+            writer.print(finalString);
+
+
+            writer.close();
+        } catch (IOException e) {
+            System.out.println("Problem with PrintWriter! Exception!");
+            // do something
+        }
+    }
+
+
+    //this reads in from a single fastQ file and returns a map with a String (the ID of a particular read) and a PairedReadsInfo object (the rest of the data on that same read)
     public static TreeMap<String, PairedReadsInfo> readFastq(String filename)
     {
         TreeMap<String, PairedReadsInfo> allPairs = new TreeMap<>();
@@ -52,6 +104,7 @@ public class main {
     }
 
 
+    //this reads in from a single fastQ files and returns a map with a String (the ID of a particular read) and a PairedReadsInfo object (the rest of the data on that same read)
     public static TreeMap<String, PairedReadsInfo> readFastqTwoFiles(String filename, String filename2)
     {
         TreeMap<String, PairedReadsInfo> allPairs = new TreeMap<>();
@@ -115,6 +168,7 @@ public class main {
     }
 
 
+    //formats fastq files into the format that Rosalind 15 looks like (e.g. "GTTTT|GAAAT") and returns an arraylist of these
     public static ArrayList<String> returnRosalindFormattedStrings(String filename) {
         ArrayList<String> associations = new ArrayList<>();
         TreeMap<String, PairedReadsInfo> thePairs = readFastq(filename);
@@ -126,6 +180,7 @@ public class main {
         }
         return associations;
     }
+
 
     public static ArrayList<String> returnStringsFromTwoFiles(String filename, String filename2) {
         ArrayList<String> associations = new ArrayList<>();
@@ -139,58 +194,108 @@ public class main {
         return associations;
     }
 
-    public static void main(String[] args)
-    {
-        //read in the Strings and then just redo it cause it's way different
-        ArrayList<String> associations = new ArrayList<>();
-
-        int k = Integer.parseInt(args[0]);
-        int gap = Integer.parseInt(args[1]);
-
-        String firstFileName = args[2];
-        if(args.length > 3) //if there are 4 arguments, we're reading in 2 files
+    private static StringBuilder combineEdgesIntoGenome(int gap, ArrayList<DoubleString> edges) {
+        StringBuilder finalString = new StringBuilder(""); //now we're iterating through the edges on our graph, building the assembled DNA
+        String lastToAdd = "";
+        for(int i = 0; i <edges.size(); i++)
         {
-            String secondFileName = args[3];
-            associations = returnStringsFromTwoFiles(firstFileName, secondFileName);
+            if(i == 0)
+            {
+                finalString.append(edges.get(i).getString1());
+            }
+            else if(i == edges.size()-1)
+            {
+                String adder = edges.get(i).getString1();
+                finalString.append(adder.substring(adder.length()-1));
+                lastToAdd = edges.get(i).getString2();
+            }
+            else
+            {
+                String adder = edges.get(i).getString1();
+                finalString.append(adder.substring(adder.length()-1));
+            }
         }
-        else
+
+        //below deals with adding the last few characters of our assembled DNA; it's basically adding those last few gap characters
+        ArrayList<String> backwardsGapCharacters = new ArrayList<>();
+        for(int i = 0; i < gap; i++)
         {
-            associations = returnRosalindFormattedStrings(firstFileName);
+            backwardsGapCharacters.add(edges.get(edges.size()-2 - i).getString2().substring(0, 1));
         }
-//        int k = 4;
-//        int gap = 2;
-
-        //THIS IS FOR A FASTQ FILE, NOT ROSALIND FORMAT:
-        //ArrayList<String> associations = returnRosalindFormattedStrings("outfileRosalind.fastq");
-
-        //ArrayList<String> associations = returnStringsFromTwoFiles("first.fastq", "second.fastq");
-
-
-
-        /* //THIS IS FOR ROSALIND 15:
-        ArrayList<String> associations = new ArrayList<>();
-        Scanner fileScanner = null;
-        try {
-            fileScanner = new Scanner(new File("ReadPairs.txt"));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        ArrayList<String> gapCharacters = new ArrayList<>();
+        for(int i = backwardsGapCharacters.size()-1; i > -1; i--)
+        {
+            gapCharacters.add(backwardsGapCharacters.get(i));
         }
-        while (fileScanner.hasNextLine()){
-            String st = fileScanner.nextLine();
-            st = st.replaceAll("\\s+",""); //remove whitespace
-            associations.add(st);
-        }*/
+
+        for(int i  =0; i < gapCharacters.size(); i++)
+        {
+            finalString.append(gapCharacters.get(i));
+        }
+        finalString.append(lastToAdd);
+        return finalString;
+    }
 
 
+    //forms the overlapping strings between nodes into a list of edges. The list is in the order of the path that's traveled to form the full genome.
+    private static ArrayList<DoubleString> formEdgesBetweenNodes(ArrayList<DoubleString> cycle, ArrayList<DoubleString> cyclePattern) {
+        ArrayList<DoubleString> edges = new ArrayList<>();
+
+        for(int i  =0; i < cyclePattern.size()-1; i++) //now we're creating the edges, which combine peices of the nodes generated
+        {
+            StringBuilder string1 = new StringBuilder(cycle.get(i).getString1());
+            String nextString1 = cycle.get(i+1).getString1();
+            string1.append(nextString1.substring(nextString1.length()-1));
+
+            StringBuilder string2 = new StringBuilder(cycle.get(i).getString2());
+            String nextString2 = cycle.get(i+1).getString2();
+            string2.append(nextString2.substring(nextString2.length()-1));
 
 
+            DoubleString newDouble = new DoubleString(string1.toString(), string2.toString());
+            edges.add(newDouble);
+        }
+        return edges;
+    }
 
+    //generates the rest of the Eulerian path
+    private static ArrayList<DoubleString> formRestOfCycle(Random r, DoubleString rand, ArrayList<DoubleString> cycle) {
+        while(edgesOnGraph(theEdgesMap)) //while there are still unused edges on the graph:
+        {
+            System.out.println("Current cycle size: " + cycle.size());
+            ArrayList<DoubleString> newCycle = new ArrayList<>();
+
+
+            while(!theEdgesMap.containsKey(rand) || noEdgesLeft(theEdgesMap.get(rand))) //keep generating a random key until you find a node with more edges
+            {
+                rand = cycle.get(r.nextInt(cycle.size()));
+            }
+            int newStart = findString(cycle, rand);
+
+
+            ArrayList<DoubleString> connectedCycle = new ArrayList<>();
+
+
+            formCycleList = new ArrayList<>();
+            newCycle = formCycle(rand);
+
+            connectedCycle = insertList(cycle, newCycle, newStart);
+
+            cycle = connectedCycle;
+
+        }
+        return cycle;
+    }
+
+
+    //finds the DoubleString object with the least number of nodes going into it (making it the start of the genome)
+    private static DoubleString findStartString(int k, ArrayList<String> associations) {
         TreeMap<DoubleString, ArrayList<DoubleString>> mappedStrings = new TreeMap<>();
         TreeMap<DoubleString, Integer> edgesComingIn = new TreeMap<>();
         TreeMap<DoubleString, Integer> edgesGoingOut = new TreeMap<>();
 
 
-        for(int i = 0; i < associations.size(); i++) //go through all iterations
+        for(int i = 0; i < associations.size(); i++) //go through all iterations of the strings found
         {
             String[] splitAssociations = associations.get(i).split("\\|");
 
@@ -255,115 +360,22 @@ public class main {
             }
             theEdgesMap.put(entry.getKey(), newList);
         }
+        return startStrings;
+    }
 
-
-        Random r = new Random();
-
-        DoubleString rand = startStrings;
-        ArrayList<DoubleString> cycle = new ArrayList<>();
-        cycle = formCycle(rand);
-
-        while(edgesOnGraph(theEdgesMap)) //while there are still unused edges on the graph:
+    private static ArrayList<String> formatFastqIntoRosalindPairs(String[] args) {
+        ArrayList<String> associations;
+        String firstFileName = args[2];
+        if(args.length > 3) //if there are 4 arguments, we're reading in 2 files
         {
-            System.out.println("Current cycle size: " + cycle.size());
-            ArrayList<DoubleString> newCycle = new ArrayList<>();
-
-
-            while(!theEdgesMap.containsKey(rand) || noEdgesLeft(theEdgesMap.get(rand))) //keep generating a random key until you find a node with more edges
-            {
-                rand = cycle.get(r.nextInt(cycle.size()));
-            }
-            int newStart = findString(cycle, rand);
-
-
-            ArrayList<DoubleString> connectedCycle = new ArrayList<>();
-
-
-            formCycleList = new ArrayList<>();
-            newCycle = formCycle(rand);
-
-            connectedCycle = insertList(cycle, newCycle, newStart);
-
-            cycle = connectedCycle;
-
+            String secondFileName = args[3];
+            associations = returnStringsFromTwoFiles(firstFileName, secondFileName);
         }
-        ArrayList<DoubleString> cyclePattern = new ArrayList<>();
-        cyclePattern = cycle;
-
-        ArrayList<DoubleString> edges = new ArrayList<>();
-
-        for(int i  =0; i < cyclePattern.size()-1; i++) //now we're creating the edges, which combine peices of the nodes generated
+        else
         {
-            StringBuilder string1 = new StringBuilder(cycle.get(i).getString1());
-            String nextString1 = cycle.get(i+1).getString1();
-            string1.append(nextString1.substring(nextString1.length()-1));
-
-            StringBuilder string2 = new StringBuilder(cycle.get(i).getString2());
-            String nextString2 = cycle.get(i+1).getString2();
-            string2.append(nextString2.substring(nextString2.length()-1));
-
-
-            DoubleString newDouble = new DoubleString(string1.toString(), string2.toString());
-            edges.add(newDouble);
+            associations = returnRosalindFormattedStrings(firstFileName);
         }
-
-
-
-        StringBuilder finalString = new StringBuilder(""); //now we're iterating through the edges on our graph, building the assembled DNA
-        String lastToAdd = "";
-        for(int i = 0; i <edges.size(); i++)
-        {
-            if(i == 0)
-            {
-                finalString.append(edges.get(i).getString1());
-            }
-            else if(i == edges.size()-1)
-            {
-                String adder = edges.get(i).getString1();
-                finalString.append(adder.substring(adder.length()-1));
-                lastToAdd = edges.get(i).getString2();
-            }
-            else
-            {
-                String adder = edges.get(i).getString1();
-                finalString.append(adder.substring(adder.length()-1));
-            }
-        }
-
-        //below deals with adding the last few characters of our assembled DNA; it's basically adding those last few gap characters
-        ArrayList<String> backwardsGapCharacters = new ArrayList<>();
-        for(int i = 0; i < gap; i++)
-        {
-            backwardsGapCharacters.add(edges.get(edges.size()-2 - i).getString2().substring(0, 1));
-        }
-        ArrayList<String> gapCharacters = new ArrayList<>();
-        for(int i = backwardsGapCharacters.size()-1; i > -1; i--)
-        {
-            gapCharacters.add(backwardsGapCharacters.get(i));
-        }
-
-        for(int i  =0; i < gapCharacters.size(); i++)
-        {
-            finalString.append(gapCharacters.get(i));
-        }
-        finalString.append(lastToAdd);
-
-
-        try{
-            PrintWriter writer = new PrintWriter("ReconstructedOut.txt", "UTF-8");
-
-
-            writer.print(finalString);
-
-
-            writer.close();
-        } catch (IOException e) {
-            System.out.println("Problem with PrintWriter! Exception!");
-            // do something
-        }
-
-
-
+        return associations;
     }
 
     //inserts the contents of oldList into newList where newStart's index indicates
