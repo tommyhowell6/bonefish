@@ -9,6 +9,12 @@ def randomNuc(DNALength):
     for count in range(int(DNALength)):
         DNA += choice("ACGT")
     return DNA
+
+def qualityRead(Length):
+    quality = ""
+    for count in range(int(Length)):
+        quality += choice(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~")
+    return quality    
         
 def makePairedReads(output, DNALength, kLength, gap):
     #line 1 
@@ -31,11 +37,11 @@ def makePairedReads(output, DNALength, kLength, gap):
         output.write("@" + readId + "_1" + "\n")
         output.write(DNA[x:x+int(kMerLength)] + "\n")
         output.write("+" + "\n")
-        output.write("this line is the quality of the read" + "\n")
+        output.write(qualityRead(kMerLength) + "\n")
         output.write("@" + readId + "_2" + "\n")
         output.write(DNA[x+int(kMerLength)+int(gap):x+int(kMerLength)+int(gap)+int(kMerLength)] + "\n")
         output.write("+" + "\n")
-        output.write("this line is the quality of the read" + "\n")
+        output.write(qualityRead(kMerLength) + "\n")
         x += 1
     
 #main
