@@ -33,7 +33,7 @@ public class SimpleMergerTest {
     public void tearDown() {
     }
 
-  //  @Test
+    @Test
     public void testMergeTwoOff() {
         System.out.println("Merge of correctly alligning sequences by two base pairs.");
         Sequence sequence1 = new SimpleSequence("atcgggacatccatcaaatcgg","1111111111111111111111");
@@ -81,7 +81,7 @@ public class SimpleMergerTest {
         System.out.println("Identical merge tests passed.");
     }
     
-   // @Test
+    @Test
     public void testMergeOfOneBaseOff() {
         System.out.println("Merge of correctly alligning sequences one base off.");
         Sequence sequence1 = new SimpleSequence("catcgggacatccatcaaatcg","1111111111111111111111");

@@ -34,7 +34,7 @@ public class SimpleMerger implements SequenceMerger{
 
         
         //First, we proceed with the assumption that the second sequence in the order is the suffix.
-        int[] indexOfOverlap = searchForOverlap(firstSequence,secondSequence);
+        int[] indexOfOverlap = searchForOverlapSubstring(firstSequence,secondSequence);
         
         //If we are unable to find an overlap, it means the other sequence was the suffix. We need to switch them.
         if(indexOfOverlap[0]==-1){
@@ -43,7 +43,7 @@ public class SimpleMerger implements SequenceMerger{
             secondSequence = sequences.getFirstSequence().getBases();
             secondProbabilities = sequences.getFirstSequence().getAccuracy();
             
-            indexOfOverlap = searchForOverlap(firstSequence,secondSequence);
+            indexOfOverlap = searchForOverlapSubstring(firstSequence,secondSequence);
         }
         
         //We've screwed up badly, neither side was able to find a match.
@@ -59,6 +59,8 @@ public class SimpleMerger implements SequenceMerger{
         outputProbabilities+=secondProbabilities.substring(indexOfOverlap[1]);
         
         Sequence output = new SimpleSequence(outputBases,outputProbabilities);
+        
+        //System.out.println("Returned merged sequence of: "+output.getBases());
         
         return output;
     }
@@ -104,6 +106,39 @@ public class SimpleMerger implements SequenceMerger{
                 output[0] = i;
                 return output;
             }
+        }
+        
+        return output;
+    }
+    
+    
+    private int[] searchForOverlapSubstring(String firstSequence, String secondSequence){
+   //     System.out.println("Testing for merge of strings: "+firstSequence+" "+firstSequence.length()+" and "+secondSequence+" "+secondSequence.length());
+        int[] output = new int[2];
+        output[0]=-1;
+        output[1]=-1;
+
+        for(int i=0;i<firstSequence.length();i++){
+            String thisWord = firstSequence.substring(i);
+            for(int j=0;j<secondSequence.length();j++){
+                String possibleSuffix = secondSequence.substring(j);
+                //we want these to be the same length, so we can throw these out.
+                if(possibleSuffix.length()>thisWord.length()){
+                    possibleSuffix = possibleSuffix.substring(0,thisWord.length());
+                }
+                //System.out.println("Comparing: "+thisWord+" and "+possibleSuffix);
+                if(thisWord.equals(possibleSuffix)){
+            //We have found the suffix we're looking for.
+                    //System.out.println("Found Match!");
+                    if(thisWord.length()>=secondSequence.length()*threshhold){
+                        output[1] = j;
+                        output[0] = i;
+                        return output;
+                    }
+                    
+                }
+            }
+
         }
         
         return output;
