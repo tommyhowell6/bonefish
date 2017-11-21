@@ -3,17 +3,17 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package hashSequencer;
+package Utility;
+
+import Utility.Sequence;
 
 /**
  *
  * @author Kris
  */
-public interface Sequence {
-    //Returns the bases stored in the sequence
-    public String getBases();
+public interface SequencePair {
     
-    //Returns the accuracy list of each base in the sequence.
-    public String getAccuracy();
+    public Sequence getFirstSequence();
+    public Sequence getSecondSequence();
     
 }

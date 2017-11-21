@@ -6,6 +6,10 @@
 
 package hashSequencer;
 
+import Utility.SequenceMerger;
+import Utility.SequencePair;
+import Utility.Sequence;
+
 /**
  *
  * @author Kris
@@ -58,7 +62,7 @@ public class SimpleMerger implements SequenceMerger{
         String outputProbabilities = firstProbabilities.substring(0, indexOfOverlap[0]);
         outputProbabilities+=secondProbabilities.substring(indexOfOverlap[1]);
         
-        Sequence output = new SimpleSequence(outputBases,outputProbabilities);
+        Sequence output = new SimpleSequence(outputBases,outputProbabilities, "INVALID ID");
         
         //System.out.println("Returned merged sequence of: "+output.getBases());
         

@@ -6,6 +6,9 @@
 
 package hashSequencer;
 
+import Utility.SequencePair;
+import Utility.Sequence;
+
 /**
  *
  * @author Kris

@@ -5,6 +5,9 @@
  */
 package hashSequencer;
 
+import Utility.SequenceMerger;
+import Utility.SequencePair;
+import Utility.Sequence;
 import java.util.ArrayList;
 
 /**

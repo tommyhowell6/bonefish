@@ -3,15 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package hashSequencer;
+
+package Utility;
 
 /**
  *
  * @author Kris
  */
-public interface SequencePair {
-    
-    public Sequence getFirstSequence();
-    public Sequence getSecondSequence();
-    
+public enum ReadState {
+    ID, READ, BLANK, ACCURACY
 }
