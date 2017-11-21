@@ -5,32 +5,25 @@
  */
 package hashSequencer;
 
-import Utility.FastQReader;
-import Utility.PairBehavior;
-import Utility.Sequence;
+import Model.GenomeAssembler;
+import Model.Sequence;
 import Utility.SequenceMerger;
-import Utility.SequencePair;
-import Utility.SequenceType;
-import java.io.File;
-import java.io.FileNotFoundException;
+import Model.SequencePair;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Collection;
 
 /**
  *
  * @author Kris
  */
-public class Sequencer {
+public class Sequencer implements GenomeAssembler{
     private static GenomeHashSet genome;
     private static SequenceMerger merger;
     
-    public static void main (String [] args){
-        if(args.length<1){
-            System.out.println("Usage: java -jar Sequencer.jar DIRECTORY_TO_FASTQ");
-            System.exit(0);
-        }
-        
+    @Override
+    public ArrayList<Sequence> assemble(ArrayList<Sequence> sequences) {
+        ArrayList<Sequence> output = new ArrayList<>();
+                
         /*****
          * 1. Add genome to hashSet.
          * 2. while (!genome.finished()):
@@ -41,13 +34,7 @@ public class Sequencer {
          * 
          * 3. Return finished genome.
          */
-        ArrayList<Sequence> rawData = importGenomeSequences(args[0]);
-        if(rawData.isEmpty()){
-            System.out.println("Sequencer encountered an error reading from input files and needs to close.");
-            System.exit(0);
-        }
-        
-        addSequencesToHashSet(rawData);
+        addSequencesToHashSet((ArrayList) sequences);
         while(!genome.finished()){
             SequencePair match = genome.selectClosestMatch();
             Sequence merged = merger.merge(match);
@@ -56,31 +43,11 @@ public class Sequencer {
             genome.add(merged);           
         }
         
-//        saveOutputGenome();
-    }
-    //Read files in passed directory into 
-    private static ArrayList<Sequence> importGenomeSequences(String path){
-        FastQReader.initialize(SequenceType.SimpleSequence,PairBehavior.MERGE);
-        try {
-            return FastQReader.readDirectory(new File(path));
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(Sequencer.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println("Unable to read any sequences\n"+ex);
-        }
-        return new ArrayList<>();
-    }
-    
-    
-    //
-    private static void addSequencesToHashSet(ArrayList input){
-        
-        
+        return output;
     }
 
-    private static void saveOutputGenome() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
     
-    
-    
+    private static void addSequencesToHashSet(ArrayList input){
+        
+    }   
 }

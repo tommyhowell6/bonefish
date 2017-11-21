@@ -1,7 +1,7 @@
 package hashSequencer;
 
-import Utility.SequencePair;
-import Utility.Sequence;
+import Model.SequencePair;
+import Model.Sequence;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

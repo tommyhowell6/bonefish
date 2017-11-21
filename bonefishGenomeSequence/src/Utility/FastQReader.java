@@ -1,5 +1,7 @@
 package Utility;
 
+import Model.Sequence;
+import Model.SequencePair;
 import hashSequencer.SimpleSequencePair;
 import java.io.BufferedReader;
 import java.io.File;
@@ -126,5 +128,7 @@ public class FastQReader {
         }
         return null;
     }
-    
+    private enum ReadState {
+        ID, READ, BLANK, ACCURACY
+    }
 }

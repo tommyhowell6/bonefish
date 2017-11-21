@@ -6,6 +6,7 @@
 
 package Utility;
 
+import Model.Sequence;
 import hashSequencer.SimpleSequence;
 
 /**

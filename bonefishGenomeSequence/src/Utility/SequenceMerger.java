@@ -5,6 +5,9 @@
  */
 package Utility;
 
+import Model.Sequence;
+import Model.SequencePair;
+
 /**
  *
  * @author Kris

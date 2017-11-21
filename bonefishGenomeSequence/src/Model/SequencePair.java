@@ -3,13 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
-package Utility;
+package Model;
 
 /**
  *
  * @author Kris
  */
-public enum ReadState {
-    ID, READ, BLANK, ACCURACY
+public interface SequencePair {
+    
+    public Sequence getFirstSequence();
+    public Sequence getSecondSequence();
+    
 }

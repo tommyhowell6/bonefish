@@ -7,8 +7,8 @@
 package hashSequencer;
 
 import Utility.SequenceMerger;
-import Utility.SequencePair;
-import Utility.Sequence;
+import Model.SequencePair;
+import Model.Sequence;
 
 /**
  *

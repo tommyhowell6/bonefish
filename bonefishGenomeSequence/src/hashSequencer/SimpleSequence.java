@@ -6,7 +6,7 @@
 
 package hashSequencer;
 
-import Utility.Sequence;
+import Model.Sequence;
 import java.util.Objects;
 
 /**
