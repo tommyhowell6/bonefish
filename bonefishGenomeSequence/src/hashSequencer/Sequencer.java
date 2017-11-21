@@ -6,6 +6,7 @@
 package hashSequencer;
 
 import Utility.FastQReader;
+import Utility.PairBehavior;
 import Utility.Sequence;
 import Utility.SequenceMerger;
 import Utility.SequencePair;
@@ -59,7 +60,7 @@ public class Sequencer {
     }
     //Read files in passed directory into 
     private static ArrayList<Sequence> importGenomeSequences(String path){
-        FastQReader.initialize(SequenceType.SimpleSequence);
+        FastQReader.initialize(SequenceType.SimpleSequence,PairBehavior.MERGE);
         try {
             return FastQReader.readDirectory(new File(path));
         } catch (FileNotFoundException ex) {

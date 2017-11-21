@@ -25,8 +25,7 @@ public class FastQReaderTest {
     @BeforeClass
     public static void setUpClass() {
         System.out.println("initialize FastQReader");
-        SequenceType sequenceType = SequenceType.SimpleSequence;
-        FastQReader.initialize(sequenceType);
+        FastQReader.initialize(SequenceType.SimpleSequence,PairBehavior.DUMB);
     }
     
     @Before
@@ -35,6 +34,7 @@ public class FastQReaderTest {
     
     @After
     public void tearDown() {
+        FastQReader.initialize(SequenceType.SimpleSequence,PairBehavior.DUMB);
     }
 
     /**

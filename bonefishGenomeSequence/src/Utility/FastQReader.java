@@ -1,5 +1,6 @@
 package Utility;
 
+import hashSequencer.SimpleSequencePair;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -7,20 +8,25 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  *  The purpose of this utility is to import FastQ files into the standard read format.
  * @author Kris
  */
 public class FastQReader {
-    private static SequenceFactory sequencePrinter;
+
+    private static PairBehavior pairBehavior;
     
     /**
      *
      * @param sequenceType
+     * @param behavior
      */
-    public static void initialize(SequenceType sequenceType){
-        sequencePrinter = new SequenceFactory(sequenceType);
+    public static void initialize(SequenceType sequenceType, PairBehavior behavior){
+        SequenceFactory.setType(sequenceType);
+        pairBehavior = behavior;
+        
     }
     
     /**
@@ -85,14 +91,13 @@ public class FastQReader {
                         lastState = ReadState.ACCURACY;
                         //TODO: What are we going to do with our pairs? For now, I'll just past references.
                         if(lastSequence==null){
-                            lastSequence = sequencePrinter.makeSequence(workingRead, workingAccuracy, workingID);
+                            lastSequence = SequenceFactory.makeSequence(workingRead, workingAccuracy, workingID);
                         }
                         else{
-                            Sequence thisSequence =sequencePrinter.makeSequence(workingRead, workingAccuracy, workingID);
+                            Sequence thisSequence =SequenceFactory.makeSequence(workingRead, workingAccuracy, workingID);
                             thisSequence.givePairedRead(lastSequence);
                             lastSequence.givePairedRead(thisSequence);
-                            output.add(lastSequence);
-                            output.add(thisSequence);
+                            output.addAll(Arrays.asList(handlePair(new SimpleSequencePair(lastSequence,thisSequence))));
                             lastSequence=null;
                         }                       
                         break;    
@@ -102,6 +107,24 @@ public class FastQReader {
             System.err.format("IOException: %s%n", x);
         }
         return output;
+    }
+
+    private static Sequence[] handlePair(SequencePair sequences) {
+        
+        switch(pairBehavior){
+            case DUMB:
+                Sequence[] output = {sequences.getFirstSequence(),sequences.getSecondSequence()};
+                return output;
+            case MERGE:
+                Sequence[] output2 = {PairedReadMerger.mergePairedRead(sequences)};
+                return output2;
+            case DISCARD:
+                Sequence[] output3 = {PairedReadMerger.discardWorseRead(sequences)};
+                return output3;
+            case FLIP:
+                return PairedReadMerger.flipPairedRead(sequences);
+        }
+        return null;
     }
     
 }

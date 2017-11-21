@@ -14,13 +14,13 @@ import hashSequencer.SimpleSequence;
  * @author Kris
  */
 public class SequenceFactory {
-    private final SequenceType type;
+    private static SequenceType type;
     
-    public SequenceFactory(SequenceType inputType){
+    public static void setType(SequenceType inputType){
         type = inputType;
     }
     
-    public Sequence makeSequence(String read, String accuracy, String id){
+    public static Sequence makeSequence(String read, String accuracy, String id){
         switch(type){
             case SimpleSequence:
                 return new SimpleSequence(read, accuracy,id);
@@ -29,7 +29,7 @@ public class SequenceFactory {
         return null;
     }
     
-    public Sequence makeSequence(String read, String accuracy){
+    public static Sequence makeSequence(String read, String accuracy){
         switch(type){
             case SimpleSequence:
                 return new SimpleSequence(read, accuracy);
