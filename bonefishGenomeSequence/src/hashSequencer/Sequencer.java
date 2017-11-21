@@ -10,7 +10,6 @@ import Model.Sequence;
 import Utility.SequenceMerger;
 import Model.SequencePair;
 import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  *
