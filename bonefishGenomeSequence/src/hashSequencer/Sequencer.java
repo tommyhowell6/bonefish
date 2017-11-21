@@ -5,10 +5,16 @@
  */
 package hashSequencer;
 
+import Utility.FastQReader;
+import Utility.Sequence;
 import Utility.SequenceMerger;
 import Utility.SequencePair;
-import Utility.Sequence;
+import Utility.SequenceType;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -19,7 +25,10 @@ public class Sequencer {
     private static SequenceMerger merger;
     
     public static void main (String [] args){
-        
+        if(args.length<1){
+            System.out.println("Usage: java -jar Sequencer.jar DIRECTORY_TO_FASTQ");
+            System.exit(0);
+        }
         
         /*****
          * 1. Add genome to hashSet.
@@ -31,7 +40,12 @@ public class Sequencer {
          * 
          * 3. Return finished genome.
          */
-        ArrayList rawData = importGenomeSequences();
+        ArrayList<Sequence> rawData = importGenomeSequences(args[0]);
+        if(rawData.isEmpty()){
+            System.out.println("Sequencer encountered an error reading from input files and needs to close.");
+            System.exit(0);
+        }
+        
         addSequencesToHashSet(rawData);
         while(!genome.finished()){
             SequencePair match = genome.selectClosestMatch();
@@ -44,10 +58,15 @@ public class Sequencer {
 //        saveOutputGenome();
     }
     //Read files in passed directory into 
-    private static ArrayList importGenomeSequences(){
-        
-        
-        return null;
+    private static ArrayList<Sequence> importGenomeSequences(String path){
+        FastQReader.initialize(SequenceType.SimpleSequence);
+        try {
+            return FastQReader.readDirectory(new File(path));
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(Sequencer.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("Unable to read any sequences\n"+ex);
+        }
+        return new ArrayList<>();
     }
     
     

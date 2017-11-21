@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package Utility;
 
 import java.io.BufferedReader;
@@ -31,12 +25,20 @@ public class FastQReader {
     
     /**
      * This method uses the readFile method to read every single sequence in a given directory.
-     * @param directory
+     * Will recursively search in nested files as well.
+     * @param folder
      * @return 
+     * @throws java.io.FileNotFoundException 
      */
-    public static ArrayList<Sequence> readDirectory(File directory){
+    public static ArrayList<Sequence> readDirectory(File folder) throws FileNotFoundException{
         ArrayList<Sequence> output = new ArrayList<>();
-        
+        for (final File fileEntry : folder.listFiles()) {
+            if (fileEntry.isDirectory()) {
+                output.addAll(readDirectory(fileEntry));
+            } else {
+                output.addAll(readFile(fileEntry));
+            }
+        }
         
         return output;
     }
@@ -46,6 +48,11 @@ public class FastQReader {
         ArrayList<Sequence> output = new ArrayList<>();
 
         System.out.println("Recieved file in: "+fileName);
+        //We need to make sure we don't read a file that isn't a fastq.
+        if(!fileName.toString().contains(".fastq")){
+            System.out.println("Attempted to read a non FASTQ file: "+fileName.toString());
+            return output;
+        }
 
         Charset charset = Charset.forName("US-ASCII");
         try (BufferedReader reader = Files.newBufferedReader(fileName.toPath(), charset)) {
