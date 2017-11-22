@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package hashSequencer;
 
 import Utility.SequenceMerger;
@@ -20,7 +14,7 @@ public class SimpleMerger implements SequenceMerger{
     
     /**
      * This is the most basic possible merger. It will search for a match between two sequences by reading both sequences, trying to find the point where they overlap.
-     * This means it will not handle errors very well.
+     * This means it will not handle errors AT ALL.
      * 
      * @param sequences, pair of seqeuences with their assosiated probabilities.
      * @return a single sequence with merged probabilities.
@@ -31,6 +25,17 @@ public class SimpleMerger implements SequenceMerger{
         if(sequences.getFirstSequence().equals(sequences.getSecondSequence())){
             return sequences.getFirstSequence();
         }
+        
+        //Next, see if one sequence is completely contained inside the second sequence.
+        if(sequences.getFirstSequence().getBases().contains(sequences.getSecondSequence().getBases())){
+            //The first sequence totally contains the second sequence.
+            return sequences.getFirstSequence();
+        }else if(sequences.getSecondSequence().getBases().contains(sequences.getFirstSequence().getBases())){
+            //the second sequence completely contains the first sequence.
+            return sequences.getSecondSequence();
+        } 
+       
+        
         String firstSequence = sequences.getFirstSequence().getBases();
         String firstProbabilities = sequences.getFirstSequence().getAccuracy();
         String secondSequence = sequences.getSecondSequence().getBases();
@@ -64,7 +69,7 @@ public class SimpleMerger implements SequenceMerger{
         
         Sequence output = new SimpleSequence(outputBases,outputProbabilities, "INVALID ID");
         
-        //System.out.println("Returned merged sequence of: "+output.getBases());
+       // System.out.println("Returned merged sequence of: "+output.getBases());
         
         return output;
     }
@@ -76,16 +81,16 @@ public class SimpleMerger implements SequenceMerger{
      * @return The starting character in the second sequence where the overlap occurs.
      */
     private int[] searchForOverlap(String firstSequence, String secondSequence){
-        System.out.println("Testing for merge of strings: "+firstSequence+" "+firstSequence.length()+" and "+secondSequence+" "+secondSequence.length());
+       //System.out.println("Testing for merge of strings: "+firstSequence+" "+firstSequence.length()+" and "+secondSequence+" "+secondSequence.length());
         int[] output = new int[2];
         output[0]=-1;
         output[1]=-1;
         
         for(int i=0;i<firstSequence.length();i++){
-            //System.out.println("Iterating on letter "+firstSequence.charAt(i)+" "+i+" of first sequence.");
+  //          System.out.println("Iterating on letter "+firstSequence.charAt(i)+" "+i+" of first sequence.");
             int match = 0;
             for(int j=0;j<secondSequence.length();j++){
-                //System.out.println("\tIterating on letter "+secondSequence.charAt(j)+" "+j+" of second sequence.");
+ //               System.out.println("\tIterating on letter "+secondSequence.charAt(j)+" "+j+" of second sequence.");
                 if(firstSequence.charAt(i)==secondSequence.charAt(j)){
                     if(match==0){
                         System.out.print("Match: "+firstSequence.charAt(i));
@@ -117,7 +122,7 @@ public class SimpleMerger implements SequenceMerger{
     
     
     private int[] searchForOverlapSubstring(String firstSequence, String secondSequence){
-   //     System.out.println("Testing for merge of strings: "+firstSequence+" "+firstSequence.length()+" and "+secondSequence+" "+secondSequence.length());
+ //       System.out.println("Testing for merge of strings: "+firstSequence+" "+firstSequence.length()+" and "+secondSequence+" "+secondSequence.length());
         int[] output = new int[2];
         output[0]=-1;
         output[1]=-1;
@@ -130,10 +135,10 @@ public class SimpleMerger implements SequenceMerger{
                 if(possibleSuffix.length()>thisWord.length()){
                     possibleSuffix = possibleSuffix.substring(0,thisWord.length());
                 }
-                //System.out.println("Comparing: "+thisWord+" and "+possibleSuffix);
+   //             System.out.println("Comparing: "+thisWord+" and "+possibleSuffix);
                 if(thisWord.equals(possibleSuffix)){
             //We have found the suffix we're looking for.
-                    //System.out.println("Found Match!");
+  //                  System.out.println("Found Match!");
                     if(thisWord.length()>=secondSequence.length()*threshhold){
                         output[1] = j;
                         output[0] = i;
