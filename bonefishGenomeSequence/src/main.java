@@ -1,5 +1,3 @@
-import sun.reflect.generics.tree.Tree;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -14,20 +12,32 @@ public class main {
     public static TreeMap<DoubleString, ArrayList<DoubleStringAndBool>> theEdgesMap = new TreeMap<>();
     public static ArrayList<DoubleString> formCycleList = new ArrayList<>();
 
+    //todo: 1. formCycle and taking the closest DNA:
+    /*
+    With different k-lengths, repeats, and middle errors, we'll have to hit a spot where we can't find the next node.
+    How do we deal with this?
+    It seems like we could just jump to the closest kmer (e.g. if a 'T' had been replaced with a 'G' it might make sense to take an ATTTTCCATGT
+    BUT this just wouldn't work when making an Eulerian path. Look at Rosalind 12--this seems like we'd quickly be making random garbage,
+    just with some completely disconnected loops and paths instead of hopefully hitting accurate next nodes when an error caused a break or too many
+    repeats or added just one extra letter.
 
-
+    OR should just removing high-error reads, and having enough reads, give me a perfect idea of what's going on? It seems like
+    this'll just not work for everything.
+    OR is this okay? We know we'll have errors, but there's a ton we can't track.
+    Rosalind 12 (Eulerian Path)
+     */
     public static void main(String[] args)
     {
         //read in the Strings and then just redo it cause it's way different
 
 
-        int k = Integer.parseInt(args[0]);
-        int gap = Integer.parseInt(args[1]);
+        //int k = Integer.parseInt(args[0]);
+        //int gap = Integer.parseInt(args[1]);
 
         ArrayList<String> associations = formatFastqIntoRosalindPairs(args);
 
 
-        DoubleString startStrings = findStartString(k, associations);
+        DoubleString startStrings = findStartString(associations);
 
 
         Random r = new Random();
@@ -42,7 +52,8 @@ public class main {
 
         ArrayList<DoubleString> edges = formEdgesBetweenNodes(cycle, cyclePattern);
 
-        StringBuilder finalString = combineEdgesIntoGenome(gap, edges);
+        StringBuilder finalString = combineEdgesIntoGenomeWithoutGap(edges, startStrings);
+
 
         printGenomeToFile(finalString);
 
@@ -194,6 +205,60 @@ public class main {
         return associations;
     }
 
+    private static StringBuilder combineEdgesIntoGenomeWithoutGap(ArrayList<DoubleString> edges, DoubleString startStrings) {
+        StringBuilder finalString = new StringBuilder(""); //now we're iterating through the edges on our graph, building the assembled DNA
+        String lastToAdd = "";
+        for(int i = 0; i <edges.size(); i++)
+        {
+            if(i == 0)
+            {
+                finalString.append(edges.get(i).getString1());
+            }
+            else if(i == edges.size()-1)
+            {
+                String adder = edges.get(i).getString1();
+                finalString.append(adder.substring(adder.length()-1));
+                lastToAdd = edges.get(i).getString2();
+            }
+            else
+            {
+                String adder = edges.get(i).getString1();
+                finalString.append(adder.substring(adder.length()-1));
+            }
+        }
+
+        int gapStop = 0;
+        for(int i = 0; i < finalString.length(); i++)
+        {
+            if(finalString.substring(i, i+ startStrings.getString2().length()).equals(startStrings.getString2()))
+            {
+                gapStop = i;
+                break;
+            }
+        }
+
+        int gap = gapStop - startStrings.getString1().length();
+        //below deals with adding the last few characters of our assembled DNA; it's basically adding those last few gap characters
+        ArrayList<String> backwardsGapCharacters = new ArrayList<>();
+        for(int i = 0; i < gap; i++)
+        {
+            backwardsGapCharacters.add(edges.get(edges.size()-2 - i).getString2().substring(0, 1));
+        }
+        ArrayList<String> gapCharacters = new ArrayList<>();
+        for(int i = backwardsGapCharacters.size()-1; i > -1; i--)
+        {
+            gapCharacters.add(backwardsGapCharacters.get(i));
+        }
+
+        for(int i  =0; i < gapCharacters.size(); i++)
+        {
+            finalString.append(gapCharacters.get(i));
+        }
+        finalString.append(lastToAdd);
+        return finalString;
+    }
+
+
     private static StringBuilder combineEdgesIntoGenome(int gap, ArrayList<DoubleString> edges) {
         StringBuilder finalString = new StringBuilder(""); //now we're iterating through the edges on our graph, building the assembled DNA
         String lastToAdd = "";
@@ -289,7 +354,7 @@ public class main {
 
 
     //finds the DoubleString object with the least number of nodes going into it (making it the start of the genome)
-    private static DoubleString findStartString(int k, ArrayList<String> associations) {
+    private static DoubleString findStartString(ArrayList<String> associations) {
         TreeMap<DoubleString, ArrayList<DoubleString>> mappedStrings = new TreeMap<>();
         TreeMap<DoubleString, Integer> edgesComingIn = new TreeMap<>();
         TreeMap<DoubleString, Integer> edgesGoingOut = new TreeMap<>();
@@ -299,11 +364,13 @@ public class main {
         {
             String[] splitAssociations = associations.get(i).split("\\|");
 
-            String firstPre = splitAssociations[0].substring(0, k-1);
-            String secondPre = splitAssociations[1].substring(0, k-1);
+            int firstSize = splitAssociations[0].length();
+            int secondSize = splitAssociations[1].length();
+            String firstPre = splitAssociations[0].substring(0, firstSize-1);
+            String secondPre = splitAssociations[1].substring(0, secondSize-1);
 
-            String firstSuf = splitAssociations[0].substring(1, k);
-            String secondSuf = splitAssociations[1].substring(1, k);
+            String firstSuf = splitAssociations[0].substring(1, firstSize);
+            String secondSuf = splitAssociations[1].substring(1, secondSize);
 
             DoubleString prefixes = new DoubleString(firstPre, secondPre); //gather the prefixes and suffixes of the current association
             DoubleString suffixes = new DoubleString(firstSuf, secondSuf);
@@ -365,7 +432,7 @@ public class main {
 
     private static ArrayList<String> formatFastqIntoRosalindPairs(String[] args) {
         ArrayList<String> associations;
-        String firstFileName = args[2];
+        String firstFileName = args[0];
         if(args.length > 3) //if there are 4 arguments, we're reading in 2 files
         {
             String secondFileName = args[3];
