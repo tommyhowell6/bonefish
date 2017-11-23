@@ -16,6 +16,7 @@ import hashSequencer.SimpleSequence;
  */
 public class SequenceFactory {
     private static SequenceType type;
+    private static final SequenceType DEFAULT_TYPE = SequenceType.SimpleSequence;
     
     public static void setType(SequenceType inputType){
         type = inputType;
@@ -31,6 +32,10 @@ public class SequenceFactory {
     }
     
     public static Sequence makeSequence(String read, String accuracy){
+        if(type ==null){
+            type = DEFAULT_TYPE;
+        }
+        
         switch(type){
             case SimpleSequence:
                 return new SimpleSequence(read, accuracy);

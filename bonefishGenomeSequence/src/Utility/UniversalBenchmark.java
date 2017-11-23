@@ -46,8 +46,9 @@ public class UniversalBenchmark {
      * Performs a benchmark with a genome already generated. Useful if you want to test the same genome on multiple assemblers to compare their accuracy.
      * 
      * @param genome Sample genome to use in testing.
+     * @return number of miliseconds required for assembling the sample genome.
      */
-    public void performBenchmarkWithGenome(SampleGenome genome) {
+    public long performBenchmarkWithGenome(SampleGenome genome) {
         long time = System.currentTimeMillis();
         System.out.println("Benchmark starting.");
         ArrayList<Sequence> output = assembler.assemble((ArrayList<Sequence>) genome.getReads());
@@ -84,6 +85,7 @@ public class UniversalBenchmark {
             }
         }
         
+        return time;
     }
     
     
