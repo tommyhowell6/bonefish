@@ -1,16 +1,16 @@
 package hashSequencer;
 
-import Utility.SequenceMerger;
-import Model.SequencePair;
 import Model.Sequence;
+import Model.SequencePair;
+import Utility.SequenceFactory;
+import Utility.SequenceMerger;
 
 /**
  *
  * @author Kris
  */
 public class SimpleMerger implements SequenceMerger{
-    private static final double threshhold = .5;
-    
+    private static final double ERROR_THRESHHOLD = .5;
     
     /**
      * This is the most basic possible merger. It will search for a match between two sequences by reading both sequences, trying to find the point where they overlap.
@@ -22,7 +22,7 @@ public class SimpleMerger implements SequenceMerger{
     @Override
     public Sequence merge(SequencePair sequences) {
         //First, we'll check to see if the sequences are the same.
-        if(sequences.getFirstSequence().equals(sequences.getSecondSequence())){
+        if(sequences.getFirstSequence().getBases().equals(sequences.getSecondSequence().getBases())){
             return sequences.getFirstSequence();
         }
         
@@ -35,24 +35,25 @@ public class SimpleMerger implements SequenceMerger{
             return sequences.getSecondSequence();
         } 
        
-        
         String firstSequence = sequences.getFirstSequence().getBases();
         String firstProbabilities = sequences.getFirstSequence().getAccuracy();
         String secondSequence = sequences.getSecondSequence().getBases();
         String secondProbabilities = sequences.getSecondSequence().getAccuracy();
-
         
         //First, we proceed with the assumption that the second sequence in the order is the suffix.
-        int[] indexOfOverlap = searchForOverlapSubstring(firstSequence,secondSequence);
+        int[] indexOfOverlap = findOverlapIndex(sequences.getFirstSequence(),sequences.getSecondSequence());
         
         //If we are unable to find an overlap, it means the other sequence was the suffix. We need to switch them.
+        if(indexOfOverlap[0]!=-1){
+            
+        }
         if(indexOfOverlap[0]==-1){
             firstSequence = sequences.getSecondSequence().getBases();
             firstProbabilities = sequences.getSecondSequence().getAccuracy();
             secondSequence = sequences.getFirstSequence().getBases();
             secondProbabilities = sequences.getFirstSequence().getAccuracy();
             
-            indexOfOverlap = searchForOverlapSubstring(firstSequence,secondSequence);
+            indexOfOverlap = findOverlapIndex(sequences.getSecondSequence(),sequences.getFirstSequence());
         }
         
         //We've screwed up badly, neither side was able to find a match.
@@ -61,67 +62,34 @@ public class SimpleMerger implements SequenceMerger{
         }
         
         //From here on out it's safe to assume that we found a match somewhere. Hurray!
+        SequenceProbabilityPair first = new SequenceProbabilityPair(firstSequence,firstProbabilities);
+        SequenceProbabilityPair second = new SequenceProbabilityPair(secondSequence,secondProbabilities);
+        
+        return mergeSequences(indexOfOverlap, first, second);
+    }
+    
+    Sequence mergeSequences(int[] indexOfOverlap,SequenceProbabilityPair first,SequenceProbabilityPair second){
+        String firstSequence = first.bases;
+        String secondSequence = second.bases;
+        String firstProbabilities = first.accuracy;
+        String secondProbabilities = second.accuracy;
+        
         String outputBases = firstSequence.substring(0, indexOfOverlap[0]);
-        outputBases+=secondSequence.substring(indexOfOverlap[1]);
-        
+        outputBases+=secondSequence.substring(indexOfOverlap[1]);      
         String outputProbabilities = firstProbabilities.substring(0, indexOfOverlap[0]);
-        outputProbabilities+=secondProbabilities.substring(indexOfOverlap[1]);
-        
-        Sequence output = new SimpleSequence(outputBases,outputProbabilities, "INVALID ID");
-        
-       // System.out.println("Returned merged sequence of: "+output.getBases());
-        
-        return output;
+        outputProbabilities+=secondProbabilities.substring(indexOfOverlap[1]); 
+        return SequenceFactory.makeSequence(outputBases,outputProbabilities);
     }
     
     /**
-     * Basic searching algorithm. Returns -1 if no overlap can be found. 
+     * Find the place where the sequences you're merging overlap. This implementation is meant to be overwritten.
      * @param firstSequence
      * @param secondSequence
-     * @return The starting character in the second sequence where the overlap occurs.
+     * @return 
      */
-    private int[] searchForOverlap(String firstSequence, String secondSequence){
-       //System.out.println("Testing for merge of strings: "+firstSequence+" "+firstSequence.length()+" and "+secondSequence+" "+secondSequence.length());
-        int[] output = new int[2];
-        output[0]=-1;
-        output[1]=-1;
-        
-        for(int i=0;i<firstSequence.length();i++){
-  //          System.out.println("Iterating on letter "+firstSequence.charAt(i)+" "+i+" of first sequence.");
-            int match = 0;
-            for(int j=0;j<secondSequence.length();j++){
- //               System.out.println("\tIterating on letter "+secondSequence.charAt(j)+" "+j+" of second sequence.");
-                if(firstSequence.charAt(i)==secondSequence.charAt(j)){
-                    if(match==0){
-                        System.out.print("Match: "+firstSequence.charAt(i));
-                    }
-                    else{
-                        System.out.print(firstSequence.charAt(i));
-                    }
-                    match++;
-                    
-                }
-                else{
-                    if(match>0){
-                        System.out.println("Match broken with: "+firstSequence.charAt(i)+" "+secondSequence.charAt(j));
-                    }
-                    match=0;
-                    
-                }
-            }
-            //We have found the suffix we're looking for.
-            if(match>=secondSequence.length()*threshhold){
-                output[1] = secondSequence.length()-match;
-                output[0] = i;
-                return output;
-            }
-        }
-        
-        return output;
-    }
-    
-    
-    private int[] searchForOverlapSubstring(String firstSequence, String secondSequence){
+    int[] findOverlapIndex(Sequence first, Sequence second){
+        String firstSequence = first.getBases();
+        String secondSequence = second.getBases();
  //       System.out.println("Testing for merge of strings: "+firstSequence+" "+firstSequence.length()+" and "+secondSequence+" "+secondSequence.length());
         int[] output = new int[2];
         output[0]=-1;
@@ -139,17 +107,27 @@ public class SimpleMerger implements SequenceMerger{
                 if(thisWord.equals(possibleSuffix)){
             //We have found the suffix we're looking for.
   //                  System.out.println("Found Match!");
-                    if(thisWord.length()>=secondSequence.length()*threshhold){
+                    if(thisWord.length()>=secondSequence.length()*ERROR_THRESHHOLD){
                         output[1] = j;
                         output[0] = i;
                         return output;
-                    }
-                    
+                    }  
                 }
             }
-
         }
         
         return output;
+    }
+    
+    /**
+     * Simple container class to be used to pass sequences around internally.
+     */
+    class SequenceProbabilityPair{
+        public SequenceProbabilityPair(String base,String acc){
+            bases = base;
+            accuracy = acc;
+        }
+        String bases;
+        String accuracy;
     }
 }
