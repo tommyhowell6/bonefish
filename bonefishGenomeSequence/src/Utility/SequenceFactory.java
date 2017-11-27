@@ -44,4 +44,22 @@ public class SequenceFactory {
         return null;
     }
     
+    /**
+     * This is for making sequences with only a read. This should only be used when the score doesn't matter, as in for testing.
+     * @param read
+     * @return 
+     */
+    public static Sequence makeTestSequence(String read){
+               if(type ==null){
+            type = DEFAULT_TYPE;
+        }
+        
+        switch(type){
+            case SimpleSequence:
+                return new SimpleSequence(read);
+        }
+        
+        return null; 
+    }
+    
 }

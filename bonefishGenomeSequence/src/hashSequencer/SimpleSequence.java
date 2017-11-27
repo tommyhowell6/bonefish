@@ -41,6 +41,21 @@ public class SimpleSequence implements Sequence{
         accuracy = acc;
         id="@merged-sequence-"+(++mergeNumber);
     }
+    
+    /**
+     * This method is used to make a sequence when all we're looking for is the bases. Useful for testing,
+     * but do not use when actually running the program.
+     * @param base 
+     */
+    public SimpleSequence(String base){
+        String acc="";
+        for(int i=0;i<base.length();i++){
+           acc+="!";
+        }
+        accuracy =acc;
+        bases = base;
+        id="@test-sequence-do-not-use";
+    }
 
     @Override
     public String getBases() {
