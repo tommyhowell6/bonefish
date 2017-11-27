@@ -69,12 +69,41 @@ public class TrieNode {
         }
     }
     
+    /**
+     * Similar to the method for adding, except that this one does not ever create
+     * new nodes. This is useful for exploring the tree, since
+     * it will not add anything new to it.
+     * @param symbol
+     * @return a node if one exists for this char, null otherwise.
+     */
+    public TrieNode explore(char symbol){
+        switch(symbol){
+            case 'A':
+                return children[0];
+            case 'T':
+                return children[1];
+            case 'C':
+                return children[2];
+            case 'G':
+                return children[3];
+            default:
+                return children[4];
+        }
+    }
+    
     public char getSymbol(){
         return pathSymbol;
     }
        
-    
-    
+    public boolean isLeaf(){
+        for (TrieNode children1 : children) {
+            if (children1 != null) {
+                return false;
+            }
+        }
+        return true;
+    }
+     
     static void reset(){
         nodeCount =0;
     }

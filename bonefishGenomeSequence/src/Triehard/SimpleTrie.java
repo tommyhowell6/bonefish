@@ -1,20 +1,15 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package Triehard;
 
 import Model.Sequence;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  *
  * @author Kris
  */
 public class SimpleTrie implements BasicTrie{
-    
     private static StringBuilder outputString = new StringBuilder();
     private final TrieNode root;
     private int size;
@@ -26,7 +21,6 @@ public class SimpleTrie implements BasicTrie{
         size =0;
     }
     
-
     @Override
     public void addSequence(Sequence s) {
         recursiveAdd(s.getBases(),root);
@@ -39,10 +33,9 @@ public class SimpleTrie implements BasicTrie{
         });
     }
     
-
     @Override
     public boolean contains(Sequence s) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return found(s.getBases(),root);
     }
 
     @Override
@@ -86,5 +79,65 @@ public class SimpleTrie implements BasicTrie{
         return size;
     }
     
-    
+    /**
+     * Searches for all the possible matches in the pattern. Probably not terribly useful for my merge
+     * algorithm, but it's possible someone might be able to use this code for something else.
+     * Such as if we decide to store the whole genome this way.
+     * @param text - The text we are searching for matches in the trie.
+     * @return The list of the beginning node indexes for all possible matches.
+     */
+    public List<Integer> walk(Sequence text){
+        ArrayList<Integer> output = new ArrayList<>();
+        return explore(output,text.getBases());
+    }
+    /**
+     * Explore a single string all the way through. Recursively add every level where 
+     * we find a new string.
+     * @param output
+     * @param bases
+     * @return 
+     */
+    private List<Integer> explore(List<Integer> output, String bases) {
+        //First, deal with the base case.
+        if(bases.length()==0){
+            return output;
+        }
+        
+        for(int i=0;i<bases.length();i++){
+            String current = bases.substring(i);
+            if(found(current, root)){
+                output.add(i);
+            } 
+        }
+        return output;
+    }
+
+    /**
+     * Searches for a single match in the trie.
+     * @param bases
+     * @return True if we can reach a leaf node in the trie this way, false otherwise.
+     */
+    private boolean found (String bases, TrieNode node){
+        //Base case: we have found a leaf.
+        if(node.isLeaf()){
+            return true;
+        }
+        //Base case: we're out of bases.
+        if(bases.length()==0){
+            return false;
+        }
+        TrieNode current = node.explore(bases.charAt(0));
+        //There is no node for the sequence we want.
+        if(current ==null){
+            return false;
+        }
+        String outString;
+        if(bases.length()==1){
+            outString = "";
+        }
+        else{
+            outString = bases.substring(1);
+        }
+        return found(outString,current);
+    }
 }
