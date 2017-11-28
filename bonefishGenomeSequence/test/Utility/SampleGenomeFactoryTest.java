@@ -30,7 +30,7 @@ public class SampleGenomeFactoryTest {
     @Test
     public void testBuildSampleGenome_int() {
         System.out.println("buildSampleGenome");
-        int genomeSize = 1000000;
+        int genomeSize = 100000;
         int expectedReads = ((genomeSize/150)*50)-10;
         SampleGenome result = SampleGenomeFactory.buildSampleGenome(genomeSize);
         assertNotNull(result);
@@ -40,6 +40,10 @@ public class SampleGenomeFactoryTest {
         boolean greater = result.getReads().size() >= expectedReads;
         System.out.println("Generated "+result.getReads().size()+" sample reads.");
         assertTrue(greater);
+        String finalGenome = result.getGenome().getBases();
+        result.getReads().stream().forEach((sequence) -> {
+            assertTrue(finalGenome.contains(sequence.getBases()));
+        });
 
     }
 

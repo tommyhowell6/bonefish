@@ -11,9 +11,9 @@ import java.util.Random;
  * @author Kris
  */
 class SampleGenomeFactory {
-    private static final int DEFAULT_READ_LENGTH = 150;
-    private static final int DEFAULT_READ_OVERLAP = 50;
-    private static final boolean DEFAULT_HAS_ERRORS = false;
+    public static final int DEFAULT_READ_LENGTH = 150;
+    public static final int DEFAULT_READ_OVERLAP = 50;
+    public static final boolean DEFAULT_HAS_ERRORS = false;
     private static final int ERROR_THRESHHOLD = 114;
     public static final char ERROR_CHAR = '-';
     /**
