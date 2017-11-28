@@ -12,11 +12,11 @@ import Model.Sequence;
  *
  * @author Kris
  */
-public interface GenomeHashSet {
+public interface GenomeHashMap {
     
-    public void add(Sequence sequence);
+    public boolean add(Sequence sequence);
     
-    public void remove(Sequence sequence);
+    public boolean remove(Sequence sequence);
     
     public SequencePair selectClosestMatch();
     

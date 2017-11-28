@@ -29,7 +29,7 @@ public class GenericSequencer {
             System.exit(0);
         }
         
-        //Select and instansiate the assembler.
+        //Select and instantiate the assembler.
         //This is where other people should add their algorithms!
         if(args[0].toLowerCase().equals("hash")){
             assembler = new Sequencer();
@@ -50,7 +50,7 @@ public class GenericSequencer {
             System.out.println("Input data read successfully!");
         }
 
-        ArrayList<Sequence> output = (ArrayList) assembler.assemble(rawData);
+        ArrayList<Sequence> output = (ArrayList<Sequence>) assembler.assemble(rawData);
         try {  
             saveOutputGenome(output);
         } catch (FileNotFoundException ex) {
@@ -78,11 +78,12 @@ public class GenericSequencer {
     private static ArrayList<Sequence> importGenomeSequences(String path){
         FastQReader.initialize(SequenceType.SimpleSequence,PairBehavior.MERGE);
         try {
-            return FastQReader.readDirectory(new File(path));
+            File file = new File(path);
+
+            return FastQReader.readDirectory(file);
         } catch (FileNotFoundException ex) {
             System.out.println("Unable to read any sequences\n"+ex);
         }
         return new ArrayList<>();
     }
-    
 }

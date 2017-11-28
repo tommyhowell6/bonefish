@@ -16,7 +16,7 @@ import java.util.ArrayList;
  * @author Kris
  */
 public class Sequencer implements GenomeAssembler{
-    private static GenomeHashSet genome;
+    private static GenomeHashMap genome = new SimpleHashMap();
     private static SequenceMerger merger;
     
     @Override
@@ -33,7 +33,7 @@ public class Sequencer implements GenomeAssembler{
          * 
          * 3. Return finished genome.
          */
-        addSequencesToHashSet((ArrayList) sequences);
+        addSequencesToHashSet((ArrayList<Sequence>) sequences);
         while(!genome.finished()){
             SequencePair match = genome.selectClosestMatch();
             Sequence merged = merger.merge(match);
@@ -46,7 +46,9 @@ public class Sequencer implements GenomeAssembler{
     }
 
     
-    private static void addSequencesToHashSet(ArrayList input){
-        
+    private static void addSequencesToHashSet(ArrayList<Sequence> input){
+        for (int i = 0; i < input.size(); i++) {
+            genome.add(input.get(i));
+        }
     }   
 }

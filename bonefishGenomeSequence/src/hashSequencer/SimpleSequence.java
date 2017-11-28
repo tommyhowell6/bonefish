@@ -17,7 +17,13 @@ public class SimpleSequence implements Sequence{
     private final String bases,accuracy, id;
     private static long mergeNumber = 0;
     private Sequence pair;
-    
+
+    public SimpleSequence(){
+        bases = null;
+        accuracy = null;
+        id = null;
+    }
+
     public SimpleSequence(String base,String acc, String identifier){
         if(base ==null||acc==null|| base.length()!=acc.length()){
             throw new IllegalArgumentException("Please be sure the probability matches the sequence!");
@@ -29,7 +35,7 @@ public class SimpleSequence implements Sequence{
     }
     /**
      * The purpose of this constructor is for making merged reads. They will not have an universal ID, so they are instead made.
-     * WARING! THIS METHOD IS NOT THREAD SAFE!
+     * WARNING! THIS METHOD IS NOT THREAD SAFE!
      * @param base
      * @param acc 
      */
@@ -57,10 +63,19 @@ public class SimpleSequence implements Sequence{
         if(o==null||o.getClass()!=this.getClass()){
             return false;
         }
-        if(this.hashCode()==o.hashCode()){
-            return true;
+        SimpleSequence testObject = (SimpleSequence) o;
+        String testBases = testObject.getBases();
+
+        for (int i = 0; i < testBases.length(); i++) {
+            if (this.bases.charAt(i) != testBases.charAt(i)){
+                return false;
+            }
         }
-        return false;
+        return true;
+
+       // if(this.hashCode()== o.hashCode()){
+       //     return true;
+       // }
     }
 
     @Override
