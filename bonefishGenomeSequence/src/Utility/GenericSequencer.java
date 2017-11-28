@@ -41,7 +41,9 @@ public class GenericSequencer {
         }
         
         System.out.println("Beginning read of input data.");
-        ArrayList<Sequence> rawData = importGenomeSequences(args[1]);
+        System.out.println("Data located at: "+args[1]);
+        String property = System.getProperty("user.dir")+args[1];
+        ArrayList<Sequence> rawData = importGenomeSequences(property);
         
         if(rawData.isEmpty()){
             System.out.println("Sequencer encountered an error reading from input files and needs to close.");
