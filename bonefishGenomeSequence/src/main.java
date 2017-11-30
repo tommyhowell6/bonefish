@@ -12,7 +12,10 @@ public class main {
     public static TreeMap<DoubleString, ArrayList<DoubleStringAndBool>> theEdgesMap = new TreeMap<>();
     public static ArrayList<DoubleString> formCycleList = new ArrayList<>();
 
-    //todo: 1. formCycle and taking the closest DNA:
+    //todo: 1. formCycle and taking the closest DNA: We really just need to see if we've iterated through the whole, remade cycle
+    //(once we've shifted it after not finding a match at the previous end) and then, if nothing's found on anything, go back to the original?
+    //the problem is we were guaranteed an end before. Now we have to guess where it's not an end or we have to shift or we have to find which one's closest.
+
     /*
     With different k-lengths, repeats, and middle errors, we'll have to hit a spot where we can't find the next node.
     How do we deal with this?
@@ -323,6 +326,23 @@ public class main {
         return edges;
     }
 
+    public static boolean doesCurrentCycleLoseNextConnection(ArrayList<DoubleString> cycle)
+    {
+
+        for(int i = 0; i < cycle.size(); i++)
+        {
+            DoubleString nextStart = cycle.get(i);
+
+            if(theEdgesMap.containsKey(nextStart) && !noEdgesLeft(theEdgesMap.get(nextStart)))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
     //generates the rest of the Eulerian path
     private static ArrayList<DoubleString> formRestOfCycle(Random r, DoubleString rand, ArrayList<DoubleString> cycle) {
         while(edgesOnGraph(theEdgesMap)) //while there are still unused edges on the graph:
@@ -330,10 +350,17 @@ public class main {
             System.out.println("Current cycle size: " + cycle.size());
             ArrayList<DoubleString> newCycle = new ArrayList<>();
 
-
-            while(!theEdgesMap.containsKey(rand) || noEdgesLeft(theEdgesMap.get(rand))) //keep generating a random key until you find a node with more edges
+            if(!doesCurrentCycleLoseNextConnection(cycle)) {
+                //todo: BELOW: There are still edges left on the cycle
+                while (!theEdgesMap.containsKey(rand) || noEdgesLeft(theEdgesMap.get(rand))) //keep generating a random key until you find a node with more edges
+                {
+                    rand = cycle.get(r.nextInt(cycle.size()));
+                }
+            }
+            else
             {
-                rand = cycle.get(r.nextInt(cycle.size()));
+
+                //todo: write something that finds closest connect to last thing in cycle, and if one can't be found, keep moving backwards
             }
             int newStart = findString(cycle, rand);
 
@@ -494,12 +521,149 @@ public class main {
         return -1;
     }
 
+    /**
+    This function attempts to calculate the differences between the DoubleStrings passed in.
+     This means it has to account for differently sized Strings, different individual pairs, or shifted Strings that otherwise match.
+     There are, however, different scores given:
+     First, if one String contains the other's prefix or suffix (so that a read got an extra char) they'll only get a difference score of one
+     If this isn't the case, however, the function just compares each char at every index, adding 1 for every different char
+     It also adds the difference of the sizes
+     */
+    //todo: also investigate just going near the map. It should be stored in "alphabetical" order, but your own comparator might not take into account
+    //things like insertions or deletions, which shifts everything but still holds a closer read.
+    public static int similarityScoreBetweenDoubleStrings(DoubleString first, DoubleString second)
+    {
+        int topDifferences = 0;
+
+
+        String firstTop = first.getString1();
+        String secondTop = second.getString1();
+
+        if(!firstTop.equals(secondTop)) {
+
+            String firstTopPre = firstTop.substring(0, firstTop.length() - 1);
+            String firstTopSuf = firstTop.substring(1, firstTop.length());
+
+            String secondTopPre = secondTop.substring(0, secondTop.length() - 1);
+            String secondTopSuf = secondTop.substring(1, secondTop.length());
+
+
+            boolean suffixOrPrefixHeld = false;
+            if (firstTop.contains(secondTopPre) || firstTop.contains(secondTopSuf)
+                    || secondTop.contains(firstTopPre) || secondTop.contains(firstTopSuf)) {
+                suffixOrPrefixHeld = true;
+            }
+
+            if (!suffixOrPrefixHeld) { //if there's not a perfect match inside (there wasn't just a shift) count all differences
+
+                for (int i = 0; i < firstTop.length(); i++) {
+                    if (secondTop.length() < i) {
+                        break;
+                    } else if (secondTop.charAt(i) != firstTop.charAt(i)) {
+                        topDifferences++; //NOTE: This may cause some problems. If two Strings are the same, except one is just shifted over by only
+                        //TWO characters, then its difference score will still be the number of characters in a string
+                    }
+                }
+
+            }
+            topDifferences += Math.abs(firstTop.length() - secondTop.length());
+        }
+
+
+
+        int bottomDifferences = 0;
+        String firstBottom = first.getString2();
+        String secondBottom = second.getString2();
+        if(!firstBottom.equals(secondBottom)) {
+
+            String firstBottomPre = firstBottom.substring(0, firstTop.length() - 1);
+            String firstBottomSuf = firstBottom.substring(1, firstTop.length());
+
+            String secondBottomPre = secondBottom.substring(0, secondTop.length() - 1);
+            String secondBottomSuf = secondBottom.substring(1, secondTop.length());
+
+
+            boolean suffixOrPrefixHeld = false;
+            if (firstBottom.contains(secondBottomPre) || firstBottom.contains(secondBottomSuf)
+                    || secondBottom.contains(firstBottomPre) || secondBottom.contains(firstBottomSuf)) {
+                suffixOrPrefixHeld = true;
+            }
+
+            if (!suffixOrPrefixHeld) { //if there's not a perfect match inside (there wasn't just a shift) count all differences
+
+                for (int i = 0; i < firstBottom.length(); i++) {
+                    if (secondBottom.length() < i) {
+                        break;
+                    } else if (secondBottom.charAt(i) != firstBottom.charAt(i)) {
+                        bottomDifferences++; //NOTE: This may cause some problems. If two Strings are the same, except one is just shifted over by only
+                        //TWO characters, then its difference score will still be the number of characters in a string
+                    }
+                }
+
+            }
+            bottomDifferences += Math.abs(firstBottom.length() - secondBottom.length());
+        }
+        return (topDifferences + bottomDifferences);
+    }
+
+
+    public static DoubleString findClosestDoubleString(DoubleString compareMe)
+    {
+        int lowest = Integer.MAX_VALUE;
+        DoubleString bestDoubleSoFar = new DoubleString("fake", "fake");
+        for(DoubleString s : theEdgesMap.keySet())
+        {
+
+            if(theEdgesMap.containsKey(s)) {
+                int newScore = similarityScoreBetweenDoubleStrings(compareMe, s);
+                if(newScore < lowest && !noEdgesLeft(theEdgesMap.get(s))) //making sure the edges on this next double string aren't used up and that the newscore's better
+                {
+                    lowest = newScore;
+                    bestDoubleSoFar = s;
+                }
+            }
+        }
+        return bestDoubleSoFar;
+    }
+
+    //This function takes all the edges in theEdgesMap connected to the "old" DoubleString,
+    //gives them to the newDS, then removes everything with the old from theEdgesMap
+    //todo: this doesn't work if we grab a node that doesn't exist and try to find something that's already there!
+    public static void addEdgesOfOldToNew(DoubleString old, DoubleString newDS)
+    {
+        ArrayList<DoubleStringAndBool> newList = theEdgesMap.get(old);
+        if(!theEdgesMap.containsKey(newDS))
+        {
+            ArrayList<DoubleStringAndBool> addMeList = new ArrayList<>();
+            theEdgesMap.put(newDS, addMeList);
+        }
+        ArrayList<DoubleStringAndBool> changingList = theEdgesMap.get(newDS);
+        for(int i = 0; i < newList.size(); i++)
+        {
+            changingList.add(newList.get(i));
+        }
+        theEdgesMap.remove(old);
+    }
+
+
+    //todo: several things are breaking here. Track down the process you're expecting, then follow this every step of the way and see where it breaks
     //forms a cycle using the graph of nodes and edges
     public static ArrayList<DoubleString> formCycle(DoubleString nextNode)
     {
         formCycleList.add(nextNode);
         if(!theEdgesMap.containsKey(nextNode))
         {
+            DoubleString closestDS = findClosestDoubleString(nextNode); //todo: if we do this, we'll never need to form another cycle! This is broke
+                                                                        //^^^in that it just grabs what's closest once a cycle's broken.
+            //addEdgesOfOldToNew(nextNode, closestDS);
+
+            DoubleString fake = new DoubleString("fake", "fake");
+            if(closestDS.equals(fake)) //if there is no closeDS with a nextNode
+            {
+                return formCycleList;
+            }
+
+            formCycle(closestDS);
             return formCycleList;
         }
 
@@ -509,8 +673,8 @@ public class main {
         {
             return formCycleList;
         }
-
-        else {
+        else
+        {
             Random r = new Random();
             DoubleStringAndBool rand = keysAsArray.get(r.nextInt(keysAsArray.size()));
             while (rand.used) {
@@ -539,11 +703,11 @@ public class main {
     //returns true if there are no unused edges left within an Arraylist of DoubleStringAndBool
     public static boolean noEdgesLeft(ArrayList<DoubleStringAndBool> theList)
     {
-        for(int i = 0; i < theList.size(); i++)
-        {
-            if(!theList.get(i).used)
-            {
-                return false;
+        if(theList != null) {
+            for (int i = 0; i < theList.size(); i++) {
+                if (!theList.get(i).used) {
+                    return false;
+                }
             }
         }
         return true;
