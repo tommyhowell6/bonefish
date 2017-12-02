@@ -6,6 +6,9 @@
 
 package hashSequencer;
 
+import Model.SequencePair;
+import Model.Sequence;
+
 /**
  *
  * @author Kris

@@ -1,9 +1,9 @@
 package hashSequencer;
 
+import Model.SequencePair;
+import Model.Sequence;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -12,17 +12,6 @@ import static org.junit.Assert.*;
  * @author Kris
  */
 public class SimpleMergerTest {
-    
-    public SimpleMergerTest() {
-    }
-    
-    @BeforeClass
-    public static void setUpClass() {
-    }
-    
-    @AfterClass
-    public static void tearDownClass() {
-    }
     
     @Before
     public void setUp() {
@@ -129,5 +118,19 @@ public class SimpleMergerTest {
         assertEquals(expResult.getAccuracy(),result.getAccuracy());
         
         System.out.println("One base off merge tests passed.");
+    }
+    
+        @Test
+    public void testContiguious(){
+        System.out.println("Merge of one sequence completely swallowed by another.");
+        Sequence sequence1 = new SimpleSequence("catcgggacatccatcaaatcg","1111111111111111111111");
+        Sequence sequence2 = new SimpleSequence("tccat","11111");
+        SimpleMerger instance = new SimpleMerger();
+        Sequence result = instance.merge(new SimpleSequencePair(sequence1,sequence2));
+        System.out.println("Merged result returned: "+result.getBases());
+        assertNotNull(result);
+        assertEquals(result,sequence1);
+        
+        System.out.println("Finished test of overlapped sequence");        
     }
 }

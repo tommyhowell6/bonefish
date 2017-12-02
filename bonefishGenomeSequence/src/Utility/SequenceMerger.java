@@ -3,15 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package hashSequencer;
+package Utility;
+
+import Model.Sequence;
+import Model.SequencePair;
 
 /**
  *
  * @author Kris
  */
-public interface SequencePair {
+public interface SequenceMerger {
     
-    public Sequence getFirstSequence();
-    public Sequence getSecondSequence();
-    
+    public Sequence merge(SequencePair sequences);
 }
