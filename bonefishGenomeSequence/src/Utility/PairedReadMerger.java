@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package Utility;
 
 import Model.Sequence;
@@ -24,8 +18,17 @@ public class PairedReadMerger {
     public static Sequence mergePairedRead(SequencePair sequences){
         String firstSequence = sequences.getFirstSequence().getBases();
         String firstAccuracy = sequences.getFirstSequence().getAccuracy();
+        
+        //As per the FASTQ format, the second sequence in a read actually starts from the other end. We need to reverse the order of the reads
+        //and bases.
         String secondSequence =sequences.getSecondSequence().getBases();
+        StringBuilder sequenceReverser = new StringBuilder(secondSequence);
+        secondSequence = sequenceReverser.reverse().toString();
+        
+        //We must do the same thing to the accuracy.
         String secondAccuracy = sequences.getSecondSequence().getAccuracy();
+        StringBuilder accuracyReverse = new StringBuilder(secondAccuracy);
+        secondAccuracy = accuracyReverse.reverse().toString();
         
         StringBuilder readOutput = new StringBuilder();
         StringBuilder accuracyOutput = new StringBuilder();
@@ -70,11 +73,22 @@ public class PairedReadMerger {
  * @return 
  */
     public static Sequence[] flipPairedRead(SequencePair sequences) {
+        //We must reverse the direction this is performed as the other end of the paired reads begin from the other side of the read strand.
+        String rawSequence = sequences.getSecondSequence().getBases();
+        StringBuilder sequenceReverse = new StringBuilder(rawSequence);
+        rawSequence = sequenceReverse.reverse().toString();
+        
         StringBuilder flippedSequence = new StringBuilder();
-        for(char c : sequences.getSecondSequence().getBases().toCharArray()){
+        for(char c : rawSequence.toCharArray()){
             flippedSequence.append(invertChar(c));
         }
-        Sequence newSequence = SequenceFactory.makeSequence(flippedSequence.toString(), sequences.getSecondSequence().getAccuracy(), sequences.getSecondSequence().getID());
+        
+        //We must also reverse the accuracy direction, or else we're going to intorduce garbage accuracy data into our system.
+        String accuracy = sequences.getSecondSequence().getAccuracy();
+        StringBuilder accuracyReverser = new StringBuilder(accuracy);
+        accuracy = accuracyReverser.reverse().toString();
+        
+        Sequence newSequence = SequenceFactory.makeSequence(flippedSequence.toString(),accuracy , sequences.getSecondSequence().getID());
         Sequence[] output = {sequences.getFirstSequence(),newSequence};
         return output;
     }
