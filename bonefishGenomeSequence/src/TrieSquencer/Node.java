@@ -1,6 +1,4 @@
-package com.bonefishtrie;
-
-import android.widget.Switch;
+package TrieSquencer;
 
 /**
  * Created by tommyhowell on 11/14/17.

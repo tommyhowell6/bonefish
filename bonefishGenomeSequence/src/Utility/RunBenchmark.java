@@ -7,6 +7,7 @@
 package Utility;
 
 import Model.GenomeAssembler;
+import TrieSquencer.TrieRunner;
 import hashSequencer.Sequencer;
 
 /**
@@ -14,11 +15,11 @@ import hashSequencer.Sequencer;
  * @author Kris
  */
 public class RunBenchmark {
-    private static final GenomeAssembler TEST_ASSEMBLER = new Sequencer();
+    private static final GenomeAssembler TEST_ASSEMBLER = new TrieRunner();
     private static final UniversalBenchmark TEST_BENCHMARK = new UniversalBenchmark(TEST_ASSEMBLER); 
     public static void main (String [] args){
         System.out.println("Preparing to run benchmark.");
-        TEST_BENCHMARK.performBenchmark();
+        TEST_BENCHMARK.performBenchmark(100000, 150, 50, false);
         System.out.println("Benchmark complete.");
     }
     

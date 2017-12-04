@@ -35,7 +35,7 @@ public class GenericSequencer {
             assembler = new Sequencer();
         }
         else if(args[0].toLowerCase().equals("euler")){
-            assembler = new EulerianSequencer();
+          //  assembler = new EulerianSequencer();
         }
         else{
             //PUT YOUR ELSES BEFORE THIS ONE!

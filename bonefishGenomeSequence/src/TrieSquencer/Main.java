@@ -1,6 +1,4 @@
-package com.bonefishtrie;
-
-import android.support.v7.app.AppCompatActivity;
+package TrieSquencer;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -10,7 +8,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Main extends AppCompatActivity
+public class Main
 {
 
     public static final String OUTFILE_FASTQ = "output.fastq";

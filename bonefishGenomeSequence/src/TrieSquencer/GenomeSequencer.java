@@ -1,7 +1,5 @@
-package com.bonefishtrie;
+package TrieSquencer;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 /**
  * Created by tommyhowell on 11/14/17.
@@ -72,8 +70,7 @@ public class GenomeSequencer
 
 
     //this method returns a node that you find from following the string passed in.
-    @Nullable
-    private Node getChildOfPath(@NonNull String s)
+    private Node getChildOfPath(String s)
     {
         Node node = root;
         for (int i = 0; i < s.length(); i++)
