@@ -16,13 +16,14 @@ class SampleGenomeFactory {
     public static final boolean DEFAULT_HAS_ERRORS = false;
     private static final int ERROR_THRESHHOLD = 114;
     public static final char ERROR_CHAR = '-';
+    private static long TOTAL_SEQUENCES=0;
     /**
      * Uses the defaults when building a sample genome.
      * @param genomeSize
      * @return The generated sample genome.
      */
     public static SampleGenome buildSampleGenome(int genomeSize){
-        return buildSampleGenome(genomeSize, DEFAULT_READ_LENGTH,DEFAULT_READ_OVERLAP,DEFAULT_HAS_ERRORS);
+        return buildSampleGenome(genomeSize, DEFAULT_READ_LENGTH,DEFAULT_READ_OVERLAP,DEFAULT_HAS_ERRORS, false);
     }
     /**
      * Constructs a sample genome without reading in from files.
@@ -33,7 +34,7 @@ class SampleGenomeFactory {
      * @return The collection of sequence objects corresponding to the reads. 
      * 
      */
-    public static SampleGenome buildSampleGenome(int genomeSize, int readLength, int readOverlap, boolean genomeErrors) {
+    public static SampleGenome buildSampleGenome(int genomeSize, int readLength, int readOverlap, boolean genomeErrors, boolean includePairs) {
         Sequence finalGenome = generateGenome(genomeSize);
         Collection<Sequence> output = new ArrayList<>();
         Random generator = new Random();
@@ -48,9 +49,23 @@ class SampleGenomeFactory {
                 end = genomeSize-1;
             
             String cleanBases = finalGenome.getBases().substring(begin, end);
+            String pairBases = "";
+            Sequence pair = null;
             Sequence currentSequence;
+            
+            //If we need to include pairs in the genome we're making, we should make the bases for that as well.
+            if(includePairs){
+                String temp = new StringBuilder(cleanBases).reverse().toString();
+                for(int k=0;k<temp.length();k++){
+                    pairBases+=PairedReadMerger.invertChar(temp.charAt(k));
+                }
+            }
+            
             if(genomeErrors){
                 currentSequence = generateDirtySequence(cleanBases);
+                if(includePairs){
+                    pair = generateDirtySequence(pairBases);
+                }
             }
             //We don't need errors or anything so we can just make a new sequence right here.
             else{
@@ -61,8 +76,21 @@ class SampleGenomeFactory {
                     char tempChar = (char)tempCharacter;
                     accuracy.append(tempChar);
                 }
-                currentSequence = SequenceFactory.makeSequence(cleanBases, accuracy.toString());
+                currentSequence = SequenceFactory.makeSequence(cleanBases, accuracy.toString(),getID());
+                if(includePairs){
+                    pair = SequenceFactory.makeSequence(pairBases, accuracy.toString());
+                }
             }
+            //Now we need to finish the pair.
+            if(includePairs&&pair!=null){
+                Sequence halfOfPair = SequenceFactory.makeSequence(pair.getBases(), pair.getAccuracy(),getPairID(currentSequence.getID()));
+                
+                currentSequence.givePairedRead(halfOfPair);
+                halfOfPair.givePairedRead(currentSequence);
+                //System.out.println("Added: "+halfOfPair);
+                output.add(halfOfPair);
+            }
+           // System.out.println("Added: "+currentSequence);
             output.add(currentSequence);
         }
         
@@ -118,5 +146,16 @@ class SampleGenomeFactory {
 
         return SequenceFactory.makeSequence(cleanBases, accuracy.toString());
     }
+
+    private static String getID() {
+        long id = ++TOTAL_SEQUENCES;
+        String output = "@KRIS_TEST_SEQUENCER:"+id+":READ/1";
+        
+        return output;
+    }
     
+    private static String getPairID(String input) {
+        String output = input.substring(0,input.length()-2)+"/2";
+        return output;
+    }
 }

@@ -24,12 +24,13 @@ public class UniversalBenchmark {
      * @param readLength The length of individual reads.
      * @param readOverlap The amount of reads that will cover a sample section of the genome.
      * @param genomeErrors Whether or not the sample reads contain errors and blank spots.
+     * @param pairs Whether or not to include the pairs from the reads.
      */
-    public void performBenchmark(int genomeSize, int readLength, int readOverlap, boolean genomeErrors){
+    public void performBenchmark(int genomeSize, int readLength, int readOverlap, boolean genomeErrors, boolean pairs){
         System.out.println("Beginning benchmark of assembler: "+assembler.getClass().toString());
         System.out.println("Building sample genome of length: "+genomeSize);
         long time = System.currentTimeMillis();
-        SampleGenome genome = SampleGenomeFactory.buildSampleGenome(genomeSize,readLength,readOverlap,genomeErrors);
+        SampleGenome genome = SampleGenomeFactory.buildSampleGenome(genomeSize,readLength,readOverlap,genomeErrors, pairs);
         time = System.currentTimeMillis()-time;
         System.out.println("Genome generated in "+time+" miliseconds.");
         
@@ -37,7 +38,7 @@ public class UniversalBenchmark {
 
     }
     public void performBenchmark(){
-        performBenchmark(DEFAULT_GENOME_SIZE,SampleGenomeFactory.DEFAULT_READ_LENGTH,SampleGenomeFactory.DEFAULT_READ_OVERLAP,SampleGenomeFactory.DEFAULT_HAS_ERRORS);
+        performBenchmark(DEFAULT_GENOME_SIZE,SampleGenomeFactory.DEFAULT_READ_LENGTH,SampleGenomeFactory.DEFAULT_READ_OVERLAP,SampleGenomeFactory.DEFAULT_HAS_ERRORS, false);
     }
 
     /**
