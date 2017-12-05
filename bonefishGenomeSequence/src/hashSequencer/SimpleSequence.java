@@ -26,6 +26,8 @@ public class SimpleSequence implements Sequence{
 
     public SimpleSequence(String base,String acc, String identifier){
         if(base ==null||acc==null|| base.length()!=acc.length()){
+            System.out.println("Bases: "+base);
+            System.out.println("Accur: "+acc);
             throw new IllegalArgumentException("Please be sure the probability matches the sequence!");
         }
         
