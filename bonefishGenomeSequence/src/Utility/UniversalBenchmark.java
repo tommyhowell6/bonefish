@@ -82,9 +82,82 @@ public class UniversalBenchmark {
             else{
                 System.out.println("Genome incorrectly assembled. No accuracy reading is possible.");
             }
+			if(output.size() == 1) {
+                double correctRatio = getCorrectRatio(output.get(0).getBases(), finalGenome);
+                System.out.println("Ratio of genome bases correct within first output Sequence: " + correctRatio);
+            }
         }
         
         return time;
+    }
+	
+	
+	
+	
+    /**
+     *
+     * This function *attempts* to calculate the ratio of matching genome bases between the final genome
+     * and the given output (if output only has 1 string).
+     *
+     * This is done by checking each cyclical rotation of the finalGenome against the given output
+     * and keeping the highest match score
+     * (this accounts for shifts that may have pushed the output off by any number of chars,
+     * though each cyclical rotation only accounts for one shift of varying length, and not multiple, which is a big problem
+     * in trying to understand just how close the genome was).
+     *
+     * Some examples include: (finalGenome, output(0), resultingScore)
+     * (ACAAT, ACAAT, 1.0)
+     * (ACAAT, AGGGG, 0.2)
+     * (ACAAT, AAAT, 0.6)
+     * (ACTGACTGACTG, ACTACTGACT, 0.333)
+     * (ACTGACTGACTG, AAGGAAGGAAGG, 0.5)
+     * ^^^These last 2 show the current problem with this comparison. By skipping just two bases but getting the other 10,
+     * one output gets 33% accuracy. However, for an algorithm that switches 6 of the bases with an incorrect one,
+     * it still gets 50% accuracy. This will be especially harmful on longer comparisons. More work may be done
+     * to improve this comparison to truly determine if our sequencers are effective.
+     *
+     * While picking randomly from 4 chars gives a 25% (0.25) chance of picking the right char,
+     * this doesn't necessarily mean a great output will be significantly higher than 0.25,
+     * especially if the sequence is accurate and just shifted over in multiple spots. We may need
+     * to develop more helpful ways of checking the accuracy if a single Sequence is returned.
+     * @param onlyOutput
+     * @param finalGenome
+     * @return
+     */
+    private double getCorrectRatio(String onlyOutput, String finalGenome) {
+        ArrayList<String> cyclicRotations = new ArrayList<>();
+
+        for(int i = 0; i < finalGenome.length(); i++)
+        {
+            StringBuilder newSB = new StringBuilder();
+            newSB.append(finalGenome.substring(finalGenome.length()-i));
+            newSB.append(finalGenome.substring(0, finalGenome.length()-i));
+            cyclicRotations.add(newSB.toString());
+
+        }
+
+        double bestScore = 0;
+        for(int rotationIndex = 0; rotationIndex < cyclicRotations.size(); rotationIndex++)
+        {
+
+
+            double equalBases = 0;
+            for (int i = 0; i < finalGenome.length(); i++) {
+                if (onlyOutput.length() <= i) {
+                    break;
+                } else {
+                    if (cyclicRotations.get(rotationIndex).charAt(i) == onlyOutput.charAt(i)) {
+                        equalBases++;
+                    }
+                }
+            }
+
+            if(equalBases > bestScore)
+            {
+                bestScore = equalBases;
+            }
+        }
+        return bestScore / finalGenome.length();
     }
        
 }
