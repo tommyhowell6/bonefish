@@ -1,4 +1,4 @@
-import java.util.Comparator;
+package eulerianSequencer;
 
 /**
  * Created by Jesse on 10/16/2017.

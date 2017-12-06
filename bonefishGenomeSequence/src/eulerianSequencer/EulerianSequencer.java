@@ -1,3 +1,10 @@
+package eulerianSequencer;
+
+import Model.GenomeAssembler;
+import Model.Sequence;
+import Utility.SequenceFactory;
+import Utility.SequenceMerger;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -5,39 +12,35 @@ import java.io.PrintWriter;
 import java.util.*;
 
 /**
- * Created by Jesse on 10/12/2017.
+ *
+ * @author Kris
  */
-public class main {
+public class EulerianSequencer implements GenomeAssembler {
+    //private static GenomeHashSet genome;
+    private static SequenceMerger merger;
+
 
     public static TreeMap<DoubleString, ArrayList<DoubleStringAndBool>> theEdgesMap = new TreeMap<>();
     public static ArrayList<DoubleString> formCycleList = new ArrayList<>();
 
-    //todo: 1. formCycle and taking the closest DNA: We really just need to see if we've iterated through the whole, remade cycle
-    //(once we've shifted it after not finding a match at the previous end) and then, if nothing's found on anything, go back to the original?
-    //the problem is we were guaranteed an end before. Now we have to guess where it's not an end or we have to shift or we have to find which one's closest.
-
-    /*
-    With different k-lengths, repeats, and middle errors, we'll have to hit a spot where we can't find the next node.
-    How do we deal with this?
-    It seems like we could just jump to the closest kmer (e.g. if a 'T' had been replaced with a 'G' it might make sense to take an ATTTTCCATGT
-    BUT this just wouldn't work when making an Eulerian path. Look at Rosalind 12--this seems like we'd quickly be making random garbage,
-    just with some completely disconnected loops and paths instead of hopefully hitting accurate next nodes when an error caused a break or too many
-    repeats or added just one extra letter.
-
-    OR should just removing high-error reads, and having enough reads, give me a perfect idea of what's going on? It seems like
-    this'll just not work for everything.
-    OR is this okay? We know we'll have errors, but there's a ton we can't track.
-    Rosalind 12 (Eulerian Path)
-     */
-    public static void main(String[] args)
-    {
-        //read in the Strings and then just redo it cause it's way different
+    @Override
+    public ArrayList<Sequence> assemble(ArrayList<Sequence> sequences) {
+//does a sequence just have one String? How do the read pairs come in?
+        //even get PairedRead is just a sequence. Should I just grab it and split it?
+        //it looks like the Sequencer.java isn't using the pairs--it's just matching the stuff with similar stuff. Where's it using
+        //read pairs? Or does it?
+        /*****
+         * 1. Read in sequences - map them out
+         * 2. Find start Node
+         * 3. Form first Cycle
+         * 4. Continue forming Eulerian cycles
+         * 5. Return output
+         */
 
 
-        //int k = Integer.parseInt(args[0]);
-        //int gap = Integer.parseInt(args[1]);
+        //ArrayList<String> associations = formatFastqIntoRosalindPairs(args); //todo: this is where you'll make the distinction between getting args and getting sequences!
 
-        ArrayList<String> associations = formatFastqIntoRosalindPairs(args);
+        ArrayList<String> associations = formatSequencesIntoRosalindPairs(sequences); //todo: this is where you'll make the distinction between getting args and getting sequences!
 
 
         DoubleString startStrings = findStartString(associations);
@@ -60,8 +63,35 @@ public class main {
 
         printGenomeToFile(finalString);
 
+        ArrayList<Sequence> returnMe = new ArrayList<>();
+        Sequence finalSequence = SequenceFactory.makeSequence(finalString.toString(), finalString.toString(), "fakeID");
+        returnMe.add(finalSequence);
+
+        return returnMe;
 
     }
+
+    /**
+     * This function will need to grab all the sequences given and put them into pairs that are formatted similar to the
+     * file in Bioinformatics Algorithm's Ros. problem #15 (e.g. "ACG|GTT\nGTA|TCC")
+     * This will allow the rest of the algorithm to carry on as it was doing before.
+     * @param sequences
+     * @return
+     */
+    public ArrayList<String> formatSequencesIntoRosalindPairs(ArrayList<Sequence> sequences)
+    {
+        ArrayList<String> finalReturnList = new ArrayList<>();
+
+        //todo: deal with repeats!
+        finalReturnList = returnRosalindFormattedStringsFromSequenceObjects(sequences);
+
+
+
+
+        return finalReturnList;
+
+    }
+
 
     //This prints out whatever string is given to it in a file called "ReconstructedOut.txt"
     private static void printGenomeToFile(StringBuilder finalString) {
@@ -77,6 +107,28 @@ public class main {
             System.out.println("Problem with PrintWriter! Exception!");
             // do something
         }
+    }
+
+
+    //todo: got to deal with repeat reads dawg - also what is a sequence supposed to be? Just 2 sequences merged together? I'm confused
+    public static TreeMap<String, PairedReadsInfo> convertSequenceObjects(ArrayList<Sequence> sequences)
+    {
+
+        TreeMap<String, PairedReadsInfo> allPairs = new TreeMap<>();
+        for(int i = 0; i < sequences.size(); i++)
+        {
+            String id = UUID.randomUUID().toString();
+            PairedReadsInfo newPair = new PairedReadsInfo();
+            newPair.setString1(sequences.get(i).getBases());
+            if(sequences.get(i).getPairedRead() != null) {
+                newPair.setString2(sequences.get(i).getPairedRead().getBases());
+            }
+            newPair.setAccuracy(sequences.get(i).getAccuracy());
+            allPairs.put(id, newPair);
+
+        }
+
+        return allPairs;
     }
 
 
@@ -181,6 +233,20 @@ public class main {
         return allPairs;
     }
 
+    public static ArrayList<String> returnRosalindFormattedStringsFromSequenceObjects(ArrayList<Sequence> sequences) {
+        ArrayList<String> associations = new ArrayList<>();
+
+        TreeMap<String, PairedReadsInfo> thePairs = convertSequenceObjects(sequences);
+        for (Map.Entry<String, PairedReadsInfo> pair : thePairs.entrySet()) {
+            String combinedAssociations = pair.getValue().getString1() + "|" + pair.getValue().getString2();
+
+            associations.add(combinedAssociations);
+
+        }
+        return associations;
+    }
+
+
 
     //formats fastq files into the format that Rosalind 15 looks like (e.g. "GTTTT|GAAAT") and returns an arraylist of these
     public static ArrayList<String> returnRosalindFormattedStrings(String filename) {
@@ -230,10 +296,11 @@ public class main {
             }
         }
 
-        int gapStop = 0;
+        //todo: revise code for gap:
+        /*int gapStop = 0;
         for(int i = 0; i < finalString.length(); i++)
         {
-            if(finalString.substring(i, i+ startStrings.getString2().length()).equals(startStrings.getString2()))
+            if(finalString.substring(i, i+ startStrings.getString2().length()).equals(startStrings.getString2())) //StringIndexOutOfBounds
             {
                 gapStop = i;
                 break;
@@ -256,7 +323,7 @@ public class main {
         for(int i  =0; i < gapCharacters.size(); i++)
         {
             finalString.append(gapCharacters.get(i));
-        }
+        }*/
         finalString.append(lastToAdd);
         return finalString;
     }
@@ -522,7 +589,7 @@ public class main {
     }
 
     /**
-    This function attempts to calculate the differences between the DoubleStrings passed in.
+     This function attempts to calculate the differences between the DoubleStrings passed in.
      This means it has to account for differently sized Strings, different individual pairs, or shifted Strings that otherwise match.
      There are, however, different scores given:
      First, if one String contains the other's prefix or suffix (so that a read got an extra char) they'll only get a difference score of one
@@ -554,10 +621,10 @@ public class main {
                 suffixOrPrefixHeld = true;
             }
 
-            if (!suffixOrPrefixHeld) { //if there's not a perfect match inside (there wasn't just a shift) count all differences
+            if (!suffixOrPrefixHeld) { //if there's not a perfect match inside (there wasn't just one shift) count all differences
 
                 for (int i = 0; i < firstTop.length(); i++) {
-                    if (secondTop.length() < i) {
+                    if (secondTop.length() <= i) {
                         break;
                     } else if (secondTop.charAt(i) != firstTop.charAt(i)) {
                         topDifferences++; //NOTE: This may cause some problems. If two Strings are the same, except one is just shifted over by only
@@ -592,7 +659,7 @@ public class main {
             if (!suffixOrPrefixHeld) { //if there's not a perfect match inside (there wasn't just a shift) count all differences
 
                 for (int i = 0; i < firstBottom.length(); i++) {
-                    if (secondBottom.length() < i) {
+                    if (secondBottom.length() <= i) {
                         break;
                     } else if (secondBottom.charAt(i) != firstBottom.charAt(i)) {
                         bottomDifferences++; //NOTE: This may cause some problems. If two Strings are the same, except one is just shifted over by only
@@ -654,7 +721,7 @@ public class main {
         if(!theEdgesMap.containsKey(nextNode))
         {
             DoubleString closestDS = findClosestDoubleString(nextNode); //todo: if we do this, we'll never need to form another cycle! This is broke
-                                                                        //^^^in that it just grabs what's closest once a cycle's broken.
+            //^^^in that it just grabs what's closest once a cycle's broken.
             //addEdgesOfOldToNew(nextNode, closestDS);
 
             DoubleString fake = new DoubleString("fake", "fake");
@@ -712,4 +779,6 @@ public class main {
         }
         return true;
     }
+
+
 }

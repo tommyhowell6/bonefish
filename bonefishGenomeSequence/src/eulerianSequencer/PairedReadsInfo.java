@@ -1,3 +1,5 @@
+package eulerianSequencer;
+
 /**
  * Created by Jesse on 10/31/2017.
  */
