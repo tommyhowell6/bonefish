@@ -28,9 +28,9 @@ public class SimpleTrie implements BasicTrie{
     }
     
     public void addAll(Collection<Sequence> c){
-        c.stream().forEach((s) -> {
-            addSequence(s);
-        });
+        for(Sequence sequence: c){
+            addSequence(sequence);
+        }
     }
     
     @Override

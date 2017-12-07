@@ -66,9 +66,7 @@ public class SimpleTrieTest {
         //We've now added the test sequences, so we can walk.
         Sequence testSequence = SequenceFactory.makeTestSequence("AATCGGGTTCAATCGGGGT");
         List<Integer> output = instance.walk(testSequence);
-        output.stream().forEach((i) -> {
-            System.out.print(i.toString()+" ");
-        });
+
         System.out.println("");
         System.out.println("test complete");
         assertTrue(output.contains(new Integer(1)));

@@ -56,8 +56,8 @@ public class Sequencer implements GenomeAssembler{
 
     
     private static void addSequencesToHashSet(ArrayList<Sequence> input){
-        input.stream().forEach((input1) -> {
-            genome.add(input1);
-        });
+        for(Sequence sequence: input){
+            genome.add(sequence);
+        }
     }   
 }

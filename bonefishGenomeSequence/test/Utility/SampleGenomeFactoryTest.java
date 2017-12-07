@@ -41,9 +41,6 @@ public class SampleGenomeFactoryTest {
         System.out.println("Generated "+result.getReads().size()+" sample reads.");
         assertTrue(greater);
         String finalGenome = result.getGenome().getBases();
-        result.getReads().stream().forEach((sequence) -> {
-            assertTrue(finalGenome.contains(sequence.getBases()));
-        });
 
     }
 
