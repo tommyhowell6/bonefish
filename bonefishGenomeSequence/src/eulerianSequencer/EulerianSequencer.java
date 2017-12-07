@@ -13,22 +13,23 @@ import java.util.*;
 
 /**
  *
- * @author Kris
+ * @author Jesse
  */
 public class EulerianSequencer implements GenomeAssembler {
-    //private static GenomeHashSet genome;
-    private static SequenceMerger merger;
 
 
     public static TreeMap<DoubleString, ArrayList<DoubleStringAndBool>> theEdgesMap = new TreeMap<>();
     public static ArrayList<DoubleString> formCycleList = new ArrayList<>();
 
+    /**
+     * assemble within the EulerianSequencer returns a genome by assembling the given list of sequences with the use of Eulerian cycles.
+     * It looks for matching prefixes and suffixes and forms an Eulerian path through them (if possible).
+     * @param sequences
+     * @return
+     */
     @Override
     public ArrayList<Sequence> assemble(ArrayList<Sequence> sequences) {
-//does a sequence just have one String? How do the read pairs come in?
-        //even get PairedRead is just a sequence. Should I just grab it and split it?
-        //it looks like the Sequencer.java isn't using the pairs--it's just matching the stuff with similar stuff. Where's it using
-        //read pairs? Or does it?
+
         /*****
          * 1. Read in sequences - map them out
          * 2. Find start Node
@@ -38,7 +39,7 @@ public class EulerianSequencer implements GenomeAssembler {
          */
 
 
-        //ArrayList<String> associations = formatFastqIntoRosalindPairs(args); //todo: this is where you'll make the distinction between getting args and getting sequences!
+        //ArrayList<String> associations = formatFastqIntoRosalindPairs(args);
 
         ArrayList<String> associations = formatSequencesIntoRosalindPairs(sequences); //todo: this is where you'll make the distinction between getting args and getting sequences!
 
@@ -58,7 +59,7 @@ public class EulerianSequencer implements GenomeAssembler {
 
         ArrayList<DoubleString> edges = formEdgesBetweenNodes(cycle, cyclePattern);
 
-        StringBuilder finalString = combineEdgesIntoGenomeWithoutGap(edges, startStrings);
+        StringBuilder finalString = combineEdgesIntoGenomeWithoutGap(edges);
 
 
         printGenomeToFile(finalString);
@@ -73,7 +74,7 @@ public class EulerianSequencer implements GenomeAssembler {
 
     /**
      * This function will need to grab all the sequences given and put them into pairs that are formatted similar to the
-     * file in Bioinformatics Algorithm's Ros. problem #15 (e.g. "ACG|GTT\nGTA|TCC")
+     * file in Bioinformatics Algorithm's format (e.g. "ACG|GTT\nGTA|TCC")
      * This will allow the rest of the algorithm to carry on as it was doing before.
      * @param sequences
      * @return
@@ -86,14 +87,15 @@ public class EulerianSequencer implements GenomeAssembler {
         finalReturnList = returnRosalindFormattedStringsFromSequenceObjects(sequences);
 
 
-
-
         return finalReturnList;
 
     }
 
 
-    //This prints out whatever string is given to it in a file called "ReconstructedOut.txt"
+    /**
+     * This prints out whatever string is given to it in a file called "ReconstructedOut.txt"
+     * @param finalString
+     */
     private static void printGenomeToFile(StringBuilder finalString) {
         try{
             PrintWriter writer = new PrintWriter("ReconstructedOut.txt", "UTF-8");
@@ -109,8 +111,12 @@ public class EulerianSequencer implements GenomeAssembler {
         }
     }
 
-
-    //todo: got to deal with repeat reads dawg - also what is a sequence supposed to be? Just 2 sequences merged together? I'm confused
+    //todo: This function still needs to deal with repeat reads.
+    /**
+     * This converts a list of Sequence objects into a map of unique IDs with PairedReads objects.
+     * @param sequences
+     * @return
+     */
     public static TreeMap<String, PairedReadsInfo> convertSequenceObjects(ArrayList<Sequence> sequences)
     {
 
@@ -132,7 +138,13 @@ public class EulerianSequencer implements GenomeAssembler {
     }
 
 
-    //this reads in from a single fastQ file and returns a map with a String (the ID of a particular read) and a PairedReadsInfo object (the rest of the data on that same read)
+
+    /**
+     * this reads in from a single fastQ file and returns a map with a String (the ID of a particular read)
+     * and a PairedReadsInfo object (the rest of the data on that same read).
+     * @param filename
+     * @return
+     */
     public static TreeMap<String, PairedReadsInfo> readFastq(String filename)
     {
         TreeMap<String, PairedReadsInfo> allPairs = new TreeMap<>();
@@ -170,7 +182,14 @@ public class EulerianSequencer implements GenomeAssembler {
     }
 
 
-    //this reads in from a single fastQ files and returns a map with a String (the ID of a particular read) and a PairedReadsInfo object (the rest of the data on that same read)
+
+    /**
+     * this reads in from two different fastQ files and returns a map with a String (the ID of a particular read)
+     * and a PairedReadsInfo object (the rest of the data on that same read).
+     * @param filename
+     * @param filename2
+     * @return
+     */
     public static TreeMap<String, PairedReadsInfo> readFastqTwoFiles(String filename, String filename2)
     {
         TreeMap<String, PairedReadsInfo> allPairs = new TreeMap<>();
@@ -233,6 +252,12 @@ public class EulerianSequencer implements GenomeAssembler {
         return allPairs;
     }
 
+    /**
+     * formats a list of Sequence objects into the format that the Bioinformatics Algorithm textbook uses
+     * (e.g. "GTTTT|GAAAT") and returns an arraylist of these.
+     * @param sequences
+     * @return
+     */
     public static ArrayList<String> returnRosalindFormattedStringsFromSequenceObjects(ArrayList<Sequence> sequences) {
         ArrayList<String> associations = new ArrayList<>();
 
@@ -247,8 +272,12 @@ public class EulerianSequencer implements GenomeAssembler {
     }
 
 
-
-    //formats fastq files into the format that Rosalind 15 looks like (e.g. "GTTTT|GAAAT") and returns an arraylist of these
+    /**
+     * formats fastq files into the format that the Bioinformatics Algorithm textbook uses
+     * (e.g. "GTTTT|GAAAT") and returns an arraylist of these.
+     * @param filename
+     * @return
+     */
     public static ArrayList<String> returnRosalindFormattedStrings(String filename) {
         ArrayList<String> associations = new ArrayList<>();
         TreeMap<String, PairedReadsInfo> thePairs = readFastq(filename);
@@ -262,6 +291,12 @@ public class EulerianSequencer implements GenomeAssembler {
     }
 
 
+    /**
+     * Returns all the strings from two fastQ files given.
+     * @param filename
+     * @param filename2
+     * @return
+     */
     public static ArrayList<String> returnStringsFromTwoFiles(String filename, String filename2) {
         ArrayList<String> associations = new ArrayList<>();
         TreeMap<String, PairedReadsInfo> thePairs = readFastqTwoFiles(filename, filename2);
@@ -274,7 +309,12 @@ public class EulerianSequencer implements GenomeAssembler {
         return associations;
     }
 
-    private static StringBuilder combineEdgesIntoGenomeWithoutGap(ArrayList<DoubleString> edges, DoubleString startStrings) {
+    /**
+     * this combines the edges parameter by adding up their overlaps into a final genome. It does not deal with the gap.
+     * @param edges
+     * @return
+     */
+    private static StringBuilder combineEdgesIntoGenomeWithoutGap(ArrayList<DoubleString> edges) {
         StringBuilder finalString = new StringBuilder(""); //now we're iterating through the edges on our graph, building the assembled DNA
         String lastToAdd = "";
         for(int i = 0; i <edges.size(); i++)
@@ -296,8 +336,10 @@ public class EulerianSequencer implements GenomeAssembler {
             }
         }
 
-        //todo: revise code for gap:
-        /*int gapStop = 0;
+        //the code below deals with the gap, if an accurate number for the gap can be found.
+
+        /*
+        int gapStop = 0;
         for(int i = 0; i < finalString.length(); i++)
         {
             if(finalString.substring(i, i+ startStrings.getString2().length()).equals(startStrings.getString2())) //StringIndexOutOfBounds
@@ -323,12 +365,20 @@ public class EulerianSequencer implements GenomeAssembler {
         for(int i  =0; i < gapCharacters.size(); i++)
         {
             finalString.append(gapCharacters.get(i));
-        }*/
+        }
+        */
         finalString.append(lastToAdd);
         return finalString;
     }
 
 
+    /**
+     * this function deals with combining the "edges" parameter into a single genome,
+     * adding the overlap between edges together and also reversing back to fill the space missed by the gap.
+     * @param gap
+     * @param edges
+     * @return
+     */
     private static StringBuilder combineEdgesIntoGenome(int gap, ArrayList<DoubleString> edges) {
         StringBuilder finalString = new StringBuilder(""); //now we're iterating through the edges on our graph, building the assembled DNA
         String lastToAdd = "";
@@ -372,7 +422,13 @@ public class EulerianSequencer implements GenomeAssembler {
     }
 
 
-    //forms the overlapping strings between nodes into a list of edges. The list is in the order of the path that's traveled to form the full genome.
+    /**
+     * forms the overlapping strings between nodes into a list of edges.
+     * The list is in the order of the path that's traveled to form the full genome.
+     * @param cycle
+     * @param cyclePattern
+     * @return
+     */
     private static ArrayList<DoubleString> formEdgesBetweenNodes(ArrayList<DoubleString> cycle, ArrayList<DoubleString> cyclePattern) {
         ArrayList<DoubleString> edges = new ArrayList<>();
 
@@ -393,6 +449,12 @@ public class EulerianSequencer implements GenomeAssembler {
         return edges;
     }
 
+    /**
+     * If theEdgesMap global variable contains any DoubleStrings given on the path
+     * in the parameter "cycle" that also have no edges left, this function returns true.
+     * @param cycle
+     * @return
+     */
     public static boolean doesCurrentCycleLoseNextConnection(ArrayList<DoubleString> cycle)
     {
 
@@ -410,7 +472,13 @@ public class EulerianSequencer implements GenomeAssembler {
     }
 
 
-    //generates the rest of the Eulerian path
+    /**
+     * generates the rest of the Eulerian path left after forming the first cycle
+     * @param r
+     * @param rand
+     * @param cycle
+     * @return
+     */
     private static ArrayList<DoubleString> formRestOfCycle(Random r, DoubleString rand, ArrayList<DoubleString> cycle) {
         while(edgesOnGraph(theEdgesMap)) //while there are still unused edges on the graph:
         {
@@ -418,7 +486,7 @@ public class EulerianSequencer implements GenomeAssembler {
             ArrayList<DoubleString> newCycle = new ArrayList<>();
 
             if(!doesCurrentCycleLoseNextConnection(cycle)) {
-                //todo: BELOW: There are still edges left on the cycle
+
                 while (!theEdgesMap.containsKey(rand) || noEdgesLeft(theEdgesMap.get(rand))) //keep generating a random key until you find a node with more edges
                 {
                     rand = cycle.get(r.nextInt(cycle.size()));
@@ -447,7 +515,13 @@ public class EulerianSequencer implements GenomeAssembler {
     }
 
 
-    //finds the DoubleString object with the least number of nodes going into it (making it the start of the genome)
+
+
+    /**
+     * finds the DoubleString object with the least number of nodes going into it (making it the start of the genome)
+     * @param associations
+     * @return
+     */
     private static DoubleString findStartString(ArrayList<String> associations) {
         TreeMap<DoubleString, ArrayList<DoubleString>> mappedStrings = new TreeMap<>();
         TreeMap<DoubleString, Integer> edgesComingIn = new TreeMap<>();
@@ -524,6 +598,17 @@ public class EulerianSequencer implements GenomeAssembler {
         return startStrings;
     }
 
+    /**
+     * This function returns read pairs formatted in the way that the textbook Bioinformatics Algorithms formats them, going from:
+     * "@fakeID
+     * ACGT
+     * +
+     * 343>>fakeAccuracy"
+     * to
+     * "ACGT|GGTA"
+     * @param args
+     * @return
+     */
     private static ArrayList<String> formatFastqIntoRosalindPairs(String[] args) {
         ArrayList<String> associations;
         String firstFileName = args[0];
@@ -539,7 +624,14 @@ public class EulerianSequencer implements GenomeAssembler {
         return associations;
     }
 
-    //inserts the contents of oldList into newList where newStart's index indicates
+
+    /**
+     * inserts the contents of oldList into newList where newStart's index indicates
+     * @param oldList
+     * @param newList
+     * @param newStart
+     * @return
+     */
     public static ArrayList<DoubleString> insertList(ArrayList<DoubleString> oldList, ArrayList<DoubleString> newList, int newStart)
     {
         ArrayList<DoubleString> savedString = new ArrayList<>();
@@ -575,7 +667,13 @@ public class EulerianSequencer implements GenomeAssembler {
         return oldList;
     }
 
-    //finds a string within an ArrayList
+
+    /**
+     * finds a String within an ArrayList
+     * @param theList
+     * @param theString
+     * @return
+     */
     public static int findString(ArrayList<DoubleString> theList, DoubleString theString)
     {
         for(int i  =0 ; i< theList.size(); i++)
@@ -588,16 +686,20 @@ public class EulerianSequencer implements GenomeAssembler {
         return -1;
     }
 
-    /**
-     This function attempts to calculate the differences between the DoubleStrings passed in.
-     This means it has to account for differently sized Strings, different individual pairs, or shifted Strings that otherwise match.
-     There are, however, different scores given:
-     First, if one String contains the other's prefix or suffix (so that a read got an extra char) they'll only get a difference score of one
-     If this isn't the case, however, the function just compares each char at every index, adding 1 for every different char
-     It also adds the difference of the sizes
-     */
+
     //todo: also investigate just going near the map. It should be stored in "alphabetical" order, but your own comparator might not take into account
-    //things like insertions or deletions, which shifts everything but still holds a closer read.
+    //todo: you should be checking scores for differently sized prefixes and suffixes! Loop through and check ones of different lengths.
+    /**
+     * This function attempts to calculate the differences between the DoubleStrings passed in.
+     * This means it has to account for differently sized Strings, different individual pairs, or shifted Strings that otherwise match.
+     * There are, however, different scores given:
+     * First, if one String contains the other's prefix or suffix (so that a read got an extra char) they'll only get a difference score of one.
+     * If this isn't the case, however, the function just compares each char at every index, adding 1 for every different char.
+     * This means that if one DoubleString has two shifts but is otherwise exactly the same, it won't be scored as similar.
+     * @param first
+     * @param second
+     * @return
+     */
     public static int similarityScoreBetweenDoubleStrings(DoubleString first, DoubleString second)
     {
         int topDifferences = 0;
@@ -607,6 +709,32 @@ public class EulerianSequencer implements GenomeAssembler {
         String secondTop = second.getString1();
 
         if(!firstTop.equals(secondTop)) {
+
+            //todo: test what's below, down to the comments comparing bestContainer to topDifference. You may just be able to
+            //take out what's below this and go straight to always measuring the topDifferences.
+            //Then apply this to the bottomDifferences too.
+            /*double bestContainer = 0;
+            for(int i = 0; i < firstTop.length(); i++)
+            {
+                for(int j = i; j < firstTop.length(); j++)
+                {
+                    if(j - i > bestContainer) {
+                        String cutString = firstTop.substring(i, j);
+                        if (secondTop.contains(firstTop))
+                        {
+                            bestContainer = secondTop.length() - cutString.length(); // contains the lowest amount of differences found.
+                        }
+                    }
+                }
+
+            }*/
+
+            /*
+            if(bestContainer < topDifferences)
+            {
+                topDifferences = bestContainer;
+            }
+             */
 
             String firstTopPre = firstTop.substring(0, firstTop.length() - 1);
             String firstTopSuf = firstTop.substring(1, firstTop.length());
@@ -627,7 +755,7 @@ public class EulerianSequencer implements GenomeAssembler {
                     if (secondTop.length() <= i) {
                         break;
                     } else if (secondTop.charAt(i) != firstTop.charAt(i)) {
-                        topDifferences++; //NOTE: This may cause some problems. If two Strings are the same, except one is just shifted over by only
+                        topDifferences++; //todo: This may cause some problems. If two Strings are the same, except one is just shifted over by only
                         //TWO characters, then its difference score will still be the number of characters in a string
                     }
                 }
@@ -662,7 +790,7 @@ public class EulerianSequencer implements GenomeAssembler {
                     if (secondBottom.length() <= i) {
                         break;
                     } else if (secondBottom.charAt(i) != firstBottom.charAt(i)) {
-                        bottomDifferences++; //NOTE: This may cause some problems. If two Strings are the same, except one is just shifted over by only
+                        bottomDifferences++; //todo: This may cause some problems. If two Strings are the same, except one is just shifted over by only
                         //TWO characters, then its difference score will still be the number of characters in a string
                     }
                 }
@@ -674,6 +802,12 @@ public class EulerianSequencer implements GenomeAssembler {
     }
 
 
+    /**
+     * findClosestDoubleString searches theEdgesMap's keySet for the most similar DoubleString to
+     * the parameter "compareMe." Similarity is scored using similarityScoreBetweenDoubleStrings().
+     * @param compareMe
+     * @return
+     */
     public static DoubleString findClosestDoubleString(DoubleString compareMe)
     {
         int lowest = Integer.MAX_VALUE;
@@ -693,9 +827,12 @@ public class EulerianSequencer implements GenomeAssembler {
         return bestDoubleSoFar;
     }
 
-    //This function takes all the edges in theEdgesMap connected to the "old" DoubleString,
-    //gives them to the newDS, then removes everything with the old from theEdgesMap
-    //todo: this doesn't work if we grab a node that doesn't exist and try to find something that's already there!
+    /**
+     * modifies theEdgesMap global variable so that the edges attached to 'old' are now attached to 'newDS.'
+     * It also removes everything with the 'old' from theEdgesMap.
+     * @param old
+     * @param newDS
+     */
     public static void addEdgesOfOldToNew(DoubleString old, DoubleString newDS)
     {
         ArrayList<DoubleStringAndBool> newList = theEdgesMap.get(old);
@@ -712,9 +849,17 @@ public class EulerianSequencer implements GenomeAssembler {
         theEdgesMap.remove(old);
     }
 
-
-    //todo: several things are breaking here. Track down the process you're expecting, then follow this every step of the way and see where it breaks
-    //forms a cycle using the graph of nodes and edges
+    /**
+     * formCycle is supposed to form a Eulerian cycle using the graph of nodes and edges given.
+     * However, because of the problems presented by real data, an Eulerian cycle is not guaranteed to be found.
+     * So, this function needs to either stop forming the cycle and return or determine that the halt
+     * was caused by an erroneous read and look for the most similar available edge and uses it.
+     *
+     * Currently, the formCycle method always continues looking for the most similar edge.
+     * Without this, the program will halt,  but it also most likely a cause of large errors within the output.
+     * @param nextNode
+     * @return
+     */
     public static ArrayList<DoubleString> formCycle(DoubleString nextNode)
     {
         formCycleList.add(nextNode);
@@ -753,7 +898,12 @@ public class EulerianSequencer implements GenomeAssembler {
         }
     }
 
-    //if there are unused edges left on the graph, returns true
+
+    /**
+     * if there are unused edges on theEdgesMap, this returns true.
+     * @param theEdgesMap
+     * @return
+     */
     public static boolean edgesOnGraph(TreeMap<DoubleString, ArrayList<DoubleStringAndBool>> theEdgesMap)
     {
         for(DoubleString s : theEdgesMap.keySet())
@@ -767,7 +917,11 @@ public class EulerianSequencer implements GenomeAssembler {
         return false;
     }
 
-    //returns true if there are no unused edges left within an Arraylist of DoubleStringAndBool
+    /**
+     * returns true if there are no unused edges left within an Arraylist of DoubleStringAndBool
+     * @param theList
+     * @return
+     */
     public static boolean noEdgesLeft(ArrayList<DoubleStringAndBool> theList)
     {
         if(theList != null) {
