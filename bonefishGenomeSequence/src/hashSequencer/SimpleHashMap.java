@@ -186,6 +186,9 @@ public class SimpleHashMap implements GenomeHashMap {
             }
             outerIndex++;
         }
+        if (greatestSoFar == -1){
+            finishedSequencing = true;
+        }
         return new SimpleSequencePair(retvalA, retvalB);
     }
 
