@@ -12,7 +12,7 @@ import java.util.ArrayList;
  */
 public class Sequencer implements GenomeAssembler{
     private static GenomeHashMap genome = new SimpleHashMap();
-    private static SequenceMerger merger;
+    private static SequenceMerger merger = new SimpleMerger();
     
     @Override
     public ArrayList<Sequence> assemble(ArrayList<Sequence> sequences) {

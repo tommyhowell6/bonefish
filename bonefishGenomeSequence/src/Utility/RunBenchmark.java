@@ -21,5 +21,4 @@ public class RunBenchmark {
         TEST_BENCHMARK.performBenchmark();
         System.out.println("Benchmark complete.");
     }
-    
 }
