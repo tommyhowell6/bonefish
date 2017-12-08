@@ -58,15 +58,21 @@ public class GenomeAccuracyCalculator {
             }
             else{
                 int randomStart = random.nextInt(assembledGenome.get(indexOfCurrentSequence).getBases().length());
-                int randomEnd = randomStart +=TESTLENGTH;
+                int randomEnd = randomStart + TESTLENGTH;
                 if(randomEnd>assembledGenome.get(indexOfCurrentSequence).getBases().length()-1){
                     randomEnd = assembledGenome.get(indexOfCurrentSequence).getBases().length()-1;
                 }
+                //System.out.println("Index of current sequence: " + indexOfCurrentSequence);
+                //System.out.println("Random start: " + randomStart);
+                //System.out.println("Random end: " + randomEnd);
+
+
                 String sample = assembledGenome.get(indexOfCurrentSequence).getBases().substring(randomStart,randomEnd);
                 
                 if(bases.contains(sample)){
                     successes++;
                 }
+                testsPerformed++;
             }
         }
         
