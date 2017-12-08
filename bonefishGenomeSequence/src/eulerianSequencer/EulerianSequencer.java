@@ -1,3 +1,10 @@
+package eulerianSequencer;
+
+import Model.GenomeAssembler;
+import Model.Sequence;
+import Utility.SequenceFactory;
+import Utility.SequenceMerger;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -5,36 +12,36 @@ import java.io.PrintWriter;
 import java.util.*;
 
 /**
- * Created by Jesse on 10/12/2017.
+ *
+ * @author Jesse
  */
-public class main {
+public class EulerianSequencer implements GenomeAssembler {
+
 
     public static TreeMap<DoubleString, ArrayList<DoubleStringAndBool>> theEdgesMap = new TreeMap<>();
     public static ArrayList<DoubleString> formCycleList = new ArrayList<>();
 
-    //todo: 1. formCycle and taking the closest DNA:
-    /*
-    With different k-lengths, repeats, and middle errors, we'll have to hit a spot where we can't find the next node.
-    How do we deal with this?
-    It seems like we could just jump to the closest kmer (e.g. if a 'T' had been replaced with a 'G' it might make sense to take an ATTTTCCATGT
-    BUT this just wouldn't work when making an Eulerian path. Look at Rosalind 12--this seems like we'd quickly be making random garbage,
-    just with some completely disconnected loops and paths instead of hopefully hitting accurate next nodes when an error caused a break or too many
-    repeats or added just one extra letter.
-
-    OR should just removing high-error reads, and having enough reads, give me a perfect idea of what's going on? It seems like
-    this'll just not work for everything.
-    OR is this okay? We know we'll have errors, but there's a ton we can't track.
-    Rosalind 12 (Eulerian Path)
+    /**
+     * assemble within the EulerianSequencer returns a genome by assembling the given list of sequences with the use of Eulerian cycles.
+     * It looks for matching prefixes and suffixes and forms an Eulerian path through them (if possible).
+     * @param sequences
+     * @return
      */
-    public static void main(String[] args)
-    {
-        //read in the Strings and then just redo it cause it's way different
+    @Override
+    public ArrayList<Sequence> assemble(ArrayList<Sequence> sequences) {
+
+        /*****
+         * 1. Read in sequences - map them out
+         * 2. Find start Node
+         * 3. Form first Cycle
+         * 4. Continue forming Eulerian cycles
+         * 5. Return output
+         */
 
 
-        //int k = Integer.parseInt(args[0]);
-        //int gap = Integer.parseInt(args[1]);
+        //ArrayList<String> associations = formatFastqIntoRosalindPairs(args);
 
-        ArrayList<String> associations = formatFastqIntoRosalindPairs(args);
+        ArrayList<String> associations = formatSequencesIntoRosalindPairs(sequences); //todo: this is where you'll make the distinction between getting args and getting sequences!
 
 
         DoubleString startStrings = findStartString(associations);
@@ -52,15 +59,43 @@ public class main {
 
         ArrayList<DoubleString> edges = formEdgesBetweenNodes(cycle, cyclePattern);
 
-        StringBuilder finalString = combineEdgesIntoGenomeWithoutGap(edges, startStrings);
+        StringBuilder finalString = combineEdgesIntoGenomeWithoutGap(edges);
 
 
         printGenomeToFile(finalString);
 
+        ArrayList<Sequence> returnMe = new ArrayList<>();
+        Sequence finalSequence = SequenceFactory.makeSequence(finalString.toString(), finalString.toString(), "fakeID");
+        returnMe.add(finalSequence);
+
+        return returnMe;
 
     }
 
-    //This prints out whatever string is given to it in a file called "ReconstructedOut.txt"
+    /**
+     * This function will need to grab all the sequences given and put them into pairs that are formatted similar to the
+     * file in Bioinformatics Algorithm's format (e.g. "ACG|GTT\nGTA|TCC")
+     * This will allow the rest of the algorithm to carry on as it was doing before.
+     * @param sequences
+     * @return
+     */
+    public ArrayList<String> formatSequencesIntoRosalindPairs(ArrayList<Sequence> sequences)
+    {
+        ArrayList<String> finalReturnList = new ArrayList<>();
+
+        //todo: deal with repeats!
+        finalReturnList = returnRosalindFormattedStringsFromSequenceObjects(sequences);
+
+
+        return finalReturnList;
+
+    }
+
+
+    /**
+     * This prints out whatever string is given to it in a file called "ReconstructedOut.txt"
+     * @param finalString
+     */
     private static void printGenomeToFile(StringBuilder finalString) {
         try{
             PrintWriter writer = new PrintWriter("ReconstructedOut.txt", "UTF-8");
@@ -76,8 +111,40 @@ public class main {
         }
     }
 
+    //todo: This function still needs to deal with repeat reads.
+    /**
+     * This converts a list of Sequence objects into a map of unique IDs with PairedReads objects.
+     * @param sequences
+     * @return
+     */
+    public static TreeMap<String, PairedReadsInfo> convertSequenceObjects(ArrayList<Sequence> sequences)
+    {
 
-    //this reads in from a single fastQ file and returns a map with a String (the ID of a particular read) and a PairedReadsInfo object (the rest of the data on that same read)
+        TreeMap<String, PairedReadsInfo> allPairs = new TreeMap<>();
+        for(int i = 0; i < sequences.size(); i++)
+        {
+            String id = UUID.randomUUID().toString();
+            PairedReadsInfo newPair = new PairedReadsInfo();
+            newPair.setString1(sequences.get(i).getBases());
+            if(sequences.get(i).getPairedRead() != null) {
+                newPair.setString2(sequences.get(i).getPairedRead().getBases());
+            }
+            newPair.setAccuracy(sequences.get(i).getAccuracy());
+            allPairs.put(id, newPair);
+
+        }
+
+        return allPairs;
+    }
+
+
+
+    /**
+     * this reads in from a single fastQ file and returns a map with a String (the ID of a particular read)
+     * and a PairedReadsInfo object (the rest of the data on that same read).
+     * @param filename
+     * @return
+     */
     public static TreeMap<String, PairedReadsInfo> readFastq(String filename)
     {
         TreeMap<String, PairedReadsInfo> allPairs = new TreeMap<>();
@@ -115,7 +182,14 @@ public class main {
     }
 
 
-    //this reads in from a single fastQ files and returns a map with a String (the ID of a particular read) and a PairedReadsInfo object (the rest of the data on that same read)
+
+    /**
+     * this reads in from two different fastQ files and returns a map with a String (the ID of a particular read)
+     * and a PairedReadsInfo object (the rest of the data on that same read).
+     * @param filename
+     * @param filename2
+     * @return
+     */
     public static TreeMap<String, PairedReadsInfo> readFastqTwoFiles(String filename, String filename2)
     {
         TreeMap<String, PairedReadsInfo> allPairs = new TreeMap<>();
@@ -178,8 +252,32 @@ public class main {
         return allPairs;
     }
 
+    /**
+     * formats a list of Sequence objects into the format that the Bioinformatics Algorithm textbook uses
+     * (e.g. "GTTTT|GAAAT") and returns an arraylist of these.
+     * @param sequences
+     * @return
+     */
+    public static ArrayList<String> returnRosalindFormattedStringsFromSequenceObjects(ArrayList<Sequence> sequences) {
+        ArrayList<String> associations = new ArrayList<>();
 
-    //formats fastq files into the format that Rosalind 15 looks like (e.g. "GTTTT|GAAAT") and returns an arraylist of these
+        TreeMap<String, PairedReadsInfo> thePairs = convertSequenceObjects(sequences);
+        for (Map.Entry<String, PairedReadsInfo> pair : thePairs.entrySet()) {
+            String combinedAssociations = pair.getValue().getString1() + "|" + pair.getValue().getString2();
+
+            associations.add(combinedAssociations);
+
+        }
+        return associations;
+    }
+
+
+    /**
+     * formats fastq files into the format that the Bioinformatics Algorithm textbook uses
+     * (e.g. "GTTTT|GAAAT") and returns an arraylist of these.
+     * @param filename
+     * @return
+     */
     public static ArrayList<String> returnRosalindFormattedStrings(String filename) {
         ArrayList<String> associations = new ArrayList<>();
         TreeMap<String, PairedReadsInfo> thePairs = readFastq(filename);
@@ -193,6 +291,12 @@ public class main {
     }
 
 
+    /**
+     * Returns all the strings from two fastQ files given.
+     * @param filename
+     * @param filename2
+     * @return
+     */
     public static ArrayList<String> returnStringsFromTwoFiles(String filename, String filename2) {
         ArrayList<String> associations = new ArrayList<>();
         TreeMap<String, PairedReadsInfo> thePairs = readFastqTwoFiles(filename, filename2);
@@ -205,7 +309,12 @@ public class main {
         return associations;
     }
 
-    private static StringBuilder combineEdgesIntoGenomeWithoutGap(ArrayList<DoubleString> edges, DoubleString startStrings) {
+    /**
+     * this combines the edges parameter by adding up their overlaps into a final genome. It does not deal with the gap.
+     * @param edges
+     * @return
+     */
+    private static StringBuilder combineEdgesIntoGenomeWithoutGap(ArrayList<DoubleString> edges) {
         StringBuilder finalString = new StringBuilder(""); //now we're iterating through the edges on our graph, building the assembled DNA
         String lastToAdd = "";
         for(int i = 0; i <edges.size(); i++)
@@ -227,10 +336,13 @@ public class main {
             }
         }
 
+        //the code below deals with the gap, if an accurate number for the gap can be found.
+
+        /*
         int gapStop = 0;
         for(int i = 0; i < finalString.length(); i++)
         {
-            if(finalString.substring(i, i+ startStrings.getString2().length()).equals(startStrings.getString2()))
+            if(finalString.substring(i, i+ startStrings.getString2().length()).equals(startStrings.getString2())) //StringIndexOutOfBounds
             {
                 gapStop = i;
                 break;
@@ -254,11 +366,19 @@ public class main {
         {
             finalString.append(gapCharacters.get(i));
         }
+        */
         finalString.append(lastToAdd);
         return finalString;
     }
 
 
+    /**
+     * this function deals with combining the "edges" parameter into a single genome,
+     * adding the overlap between edges together and also reversing back to fill the space missed by the gap.
+     * @param gap
+     * @param edges
+     * @return
+     */
     private static StringBuilder combineEdgesIntoGenome(int gap, ArrayList<DoubleString> edges) {
         StringBuilder finalString = new StringBuilder(""); //now we're iterating through the edges on our graph, building the assembled DNA
         String lastToAdd = "";
@@ -302,7 +422,13 @@ public class main {
     }
 
 
-    //forms the overlapping strings between nodes into a list of edges. The list is in the order of the path that's traveled to form the full genome.
+    /**
+     * forms the overlapping strings between nodes into a list of edges.
+     * The list is in the order of the path that's traveled to form the full genome.
+     * @param cycle
+     * @param cyclePattern
+     * @return
+     */
     private static ArrayList<DoubleString> formEdgesBetweenNodes(ArrayList<DoubleString> cycle, ArrayList<DoubleString> cyclePattern) {
         ArrayList<DoubleString> edges = new ArrayList<>();
 
@@ -323,17 +449,53 @@ public class main {
         return edges;
     }
 
-    //generates the rest of the Eulerian path
+    /**
+     * If theEdgesMap global variable contains any DoubleStrings given on the path
+     * in the parameter "cycle" that also have no edges left, this function returns true.
+     * @param cycle
+     * @return
+     */
+    public static boolean doesCurrentCycleLoseNextConnection(ArrayList<DoubleString> cycle)
+    {
+
+        for(int i = 0; i < cycle.size(); i++)
+        {
+            DoubleString nextStart = cycle.get(i);
+
+            if(theEdgesMap.containsKey(nextStart) && !noEdgesLeft(theEdgesMap.get(nextStart)))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+    /**
+     * generates the rest of the Eulerian path left after forming the first cycle
+     * @param r
+     * @param rand
+     * @param cycle
+     * @return
+     */
     private static ArrayList<DoubleString> formRestOfCycle(Random r, DoubleString rand, ArrayList<DoubleString> cycle) {
         while(edgesOnGraph(theEdgesMap)) //while there are still unused edges on the graph:
         {
             System.out.println("Current cycle size: " + cycle.size());
             ArrayList<DoubleString> newCycle = new ArrayList<>();
 
+            if(!doesCurrentCycleLoseNextConnection(cycle)) {
 
-            while(!theEdgesMap.containsKey(rand) || noEdgesLeft(theEdgesMap.get(rand))) //keep generating a random key until you find a node with more edges
+                while (!theEdgesMap.containsKey(rand) || noEdgesLeft(theEdgesMap.get(rand))) //keep generating a random key until you find a node with more edges
+                {
+                    rand = cycle.get(r.nextInt(cycle.size()));
+                }
+            }
+            else
             {
-                rand = cycle.get(r.nextInt(cycle.size()));
+
+                //todo: write something that finds closest connect to last thing in cycle, and if one can't be found, keep moving backwards
             }
             int newStart = findString(cycle, rand);
 
@@ -353,7 +515,13 @@ public class main {
     }
 
 
-    //finds the DoubleString object with the least number of nodes going into it (making it the start of the genome)
+
+
+    /**
+     * finds the DoubleString object with the least number of nodes going into it (making it the start of the genome)
+     * @param associations
+     * @return
+     */
     private static DoubleString findStartString(ArrayList<String> associations) {
         TreeMap<DoubleString, ArrayList<DoubleString>> mappedStrings = new TreeMap<>();
         TreeMap<DoubleString, Integer> edgesComingIn = new TreeMap<>();
@@ -430,6 +598,17 @@ public class main {
         return startStrings;
     }
 
+    /**
+     * This function returns read pairs formatted in the way that the textbook Bioinformatics Algorithms formats them, going from:
+     * "@fakeID
+     * ACGT
+     * +
+     * 343>>fakeAccuracy"
+     * to
+     * "ACGT|GGTA"
+     * @param args
+     * @return
+     */
     private static ArrayList<String> formatFastqIntoRosalindPairs(String[] args) {
         ArrayList<String> associations;
         String firstFileName = args[0];
@@ -445,7 +624,14 @@ public class main {
         return associations;
     }
 
-    //inserts the contents of oldList into newList where newStart's index indicates
+
+    /**
+     * inserts the contents of oldList into newList where newStart's index indicates
+     * @param oldList
+     * @param newList
+     * @param newStart
+     * @return
+     */
     public static ArrayList<DoubleString> insertList(ArrayList<DoubleString> oldList, ArrayList<DoubleString> newList, int newStart)
     {
         ArrayList<DoubleString> savedString = new ArrayList<>();
@@ -481,7 +667,13 @@ public class main {
         return oldList;
     }
 
-    //finds a string within an ArrayList
+
+    /**
+     * finds a String within an ArrayList
+     * @param theList
+     * @param theString
+     * @return
+     */
     public static int findString(ArrayList<DoubleString> theList, DoubleString theString)
     {
         for(int i  =0 ; i< theList.size(); i++)
@@ -494,12 +686,196 @@ public class main {
         return -1;
     }
 
-    //forms a cycle using the graph of nodes and edges
+
+    //todo: also investigate just going near the map. It should be stored in "alphabetical" order, but your own comparator might not take into account
+    //todo: you should be checking scores for differently sized prefixes and suffixes! Loop through and check ones of different lengths.
+    /**
+     * This function attempts to calculate the differences between the DoubleStrings passed in.
+     * This means it has to account for differently sized Strings, different individual pairs, or shifted Strings that otherwise match.
+     * There are, however, different scores given:
+     * First, if one String contains the other's prefix or suffix (so that a read got an extra char) they'll only get a difference score of one.
+     * If this isn't the case, however, the function just compares each char at every index, adding 1 for every different char.
+     * This means that if one DoubleString has two shifts but is otherwise exactly the same, it won't be scored as similar.
+     * @param first
+     * @param second
+     * @return
+     */
+    public static int similarityScoreBetweenDoubleStrings(DoubleString first, DoubleString second)
+    {
+        int topDifferences = 0;
+
+
+        String firstTop = first.getString1();
+        String secondTop = second.getString1();
+
+        if(!firstTop.equals(secondTop)) {
+
+            //todo: test what's below, down to the comments comparing bestContainer to topDifference. You may just be able to
+            //take out what's below this and go straight to always measuring the topDifferences.
+            //Then apply this to the bottomDifferences too.
+            /*double bestContainer = 0;
+            for(int i = 0; i < firstTop.length(); i++)
+            {
+                for(int j = i; j < firstTop.length(); j++)
+                {
+                    if(j - i > bestContainer) {
+                        String cutString = firstTop.substring(i, j);
+                        if (secondTop.contains(firstTop))
+                        {
+                            bestContainer = secondTop.length() - cutString.length(); // contains the lowest amount of differences found.
+                        }
+                    }
+                }
+
+            }*/
+
+            /*
+            if(bestContainer < topDifferences)
+            {
+                topDifferences = bestContainer;
+            }
+             */
+
+            String firstTopPre = firstTop.substring(0, firstTop.length() - 1);
+            String firstTopSuf = firstTop.substring(1, firstTop.length());
+
+            String secondTopPre = secondTop.substring(0, secondTop.length() - 1);
+            String secondTopSuf = secondTop.substring(1, secondTop.length());
+
+
+            boolean suffixOrPrefixHeld = false;
+            if (firstTop.contains(secondTopPre) || firstTop.contains(secondTopSuf)
+                    || secondTop.contains(firstTopPre) || secondTop.contains(firstTopSuf)) {
+                suffixOrPrefixHeld = true;
+            }
+
+            if (!suffixOrPrefixHeld) { //if there's not a perfect match inside (there wasn't just one shift) count all differences
+
+                for (int i = 0; i < firstTop.length(); i++) {
+                    if (secondTop.length() <= i) {
+                        break;
+                    } else if (secondTop.charAt(i) != firstTop.charAt(i)) {
+                        topDifferences++; //todo: This may cause some problems. If two Strings are the same, except one is just shifted over by only
+                        //TWO characters, then its difference score will still be the number of characters in a string
+                    }
+                }
+
+            }
+            topDifferences += Math.abs(firstTop.length() - secondTop.length());
+        }
+
+
+
+        int bottomDifferences = 0;
+        String firstBottom = first.getString2();
+        String secondBottom = second.getString2();
+        if(!firstBottom.equals(secondBottom)) {
+
+            String firstBottomPre = firstBottom.substring(0, firstTop.length() - 1);
+            String firstBottomSuf = firstBottom.substring(1, firstTop.length());
+
+            String secondBottomPre = secondBottom.substring(0, secondTop.length() - 1);
+            String secondBottomSuf = secondBottom.substring(1, secondTop.length());
+
+
+            boolean suffixOrPrefixHeld = false;
+            if (firstBottom.contains(secondBottomPre) || firstBottom.contains(secondBottomSuf)
+                    || secondBottom.contains(firstBottomPre) || secondBottom.contains(firstBottomSuf)) {
+                suffixOrPrefixHeld = true;
+            }
+
+            if (!suffixOrPrefixHeld) { //if there's not a perfect match inside (there wasn't just a shift) count all differences
+
+                for (int i = 0; i < firstBottom.length(); i++) {
+                    if (secondBottom.length() <= i) {
+                        break;
+                    } else if (secondBottom.charAt(i) != firstBottom.charAt(i)) {
+                        bottomDifferences++; //todo: This may cause some problems. If two Strings are the same, except one is just shifted over by only
+                        //TWO characters, then its difference score will still be the number of characters in a string
+                    }
+                }
+
+            }
+            bottomDifferences += Math.abs(firstBottom.length() - secondBottom.length());
+        }
+        return (topDifferences + bottomDifferences);
+    }
+
+
+    /**
+     * findClosestDoubleString searches theEdgesMap's keySet for the most similar DoubleString to
+     * the parameter "compareMe." Similarity is scored using similarityScoreBetweenDoubleStrings().
+     * @param compareMe
+     * @return
+     */
+    public static DoubleString findClosestDoubleString(DoubleString compareMe)
+    {
+        int lowest = Integer.MAX_VALUE;
+        DoubleString bestDoubleSoFar = new DoubleString("fake", "fake");
+        for(DoubleString s : theEdgesMap.keySet())
+        {
+
+            if(theEdgesMap.containsKey(s)) {
+                int newScore = similarityScoreBetweenDoubleStrings(compareMe, s);
+                if(newScore < lowest && !noEdgesLeft(theEdgesMap.get(s))) //making sure the edges on this next double string aren't used up and that the newscore's better
+                {
+                    lowest = newScore;
+                    bestDoubleSoFar = s;
+                }
+            }
+        }
+        return bestDoubleSoFar;
+    }
+
+    /**
+     * modifies theEdgesMap global variable so that the edges attached to 'old' are now attached to 'newDS.'
+     * It also removes everything with the 'old' from theEdgesMap.
+     * @param old
+     * @param newDS
+     */
+    public static void addEdgesOfOldToNew(DoubleString old, DoubleString newDS)
+    {
+        ArrayList<DoubleStringAndBool> newList = theEdgesMap.get(old);
+        if(!theEdgesMap.containsKey(newDS))
+        {
+            ArrayList<DoubleStringAndBool> addMeList = new ArrayList<>();
+            theEdgesMap.put(newDS, addMeList);
+        }
+        ArrayList<DoubleStringAndBool> changingList = theEdgesMap.get(newDS);
+        for(int i = 0; i < newList.size(); i++)
+        {
+            changingList.add(newList.get(i));
+        }
+        theEdgesMap.remove(old);
+    }
+
+    /**
+     * formCycle is supposed to form a Eulerian cycle using the graph of nodes and edges given.
+     * However, because of the problems presented by real data, an Eulerian cycle is not guaranteed to be found.
+     * So, this function needs to either stop forming the cycle and return or determine that the halt
+     * was caused by an erroneous read and look for the most similar available edge and uses it.
+     *
+     * Currently, the formCycle method always continues looking for the most similar edge.
+     * Without this, the program will halt,  but it also most likely a cause of large errors within the output.
+     * @param nextNode
+     * @return
+     */
     public static ArrayList<DoubleString> formCycle(DoubleString nextNode)
     {
         formCycleList.add(nextNode);
         if(!theEdgesMap.containsKey(nextNode))
         {
+            DoubleString closestDS = findClosestDoubleString(nextNode); //todo: if we do this, we'll never need to form another cycle! This is broke
+            //^^^in that it just grabs what's closest once a cycle's broken.
+            //addEdgesOfOldToNew(nextNode, closestDS);
+
+            DoubleString fake = new DoubleString("fake", "fake");
+            if(closestDS.equals(fake)) //if there is no closeDS with a nextNode
+            {
+                return formCycleList;
+            }
+
+            formCycle(closestDS);
             return formCycleList;
         }
 
@@ -509,8 +885,8 @@ public class main {
         {
             return formCycleList;
         }
-
-        else {
+        else
+        {
             Random r = new Random();
             DoubleStringAndBool rand = keysAsArray.get(r.nextInt(keysAsArray.size()));
             while (rand.used) {
@@ -522,7 +898,12 @@ public class main {
         }
     }
 
-    //if there are unused edges left on the graph, returns true
+
+    /**
+     * if there are unused edges on theEdgesMap, this returns true.
+     * @param theEdgesMap
+     * @return
+     */
     public static boolean edgesOnGraph(TreeMap<DoubleString, ArrayList<DoubleStringAndBool>> theEdgesMap)
     {
         for(DoubleString s : theEdgesMap.keySet())
@@ -536,16 +917,22 @@ public class main {
         return false;
     }
 
-    //returns true if there are no unused edges left within an Arraylist of DoubleStringAndBool
+    /**
+     * returns true if there are no unused edges left within an Arraylist of DoubleStringAndBool
+     * @param theList
+     * @return
+     */
     public static boolean noEdgesLeft(ArrayList<DoubleStringAndBool> theList)
     {
-        for(int i = 0; i < theList.size(); i++)
-        {
-            if(!theList.get(i).used)
-            {
-                return false;
+        if(theList != null) {
+            for (int i = 0; i < theList.size(); i++) {
+                if (!theList.get(i).used) {
+                    return false;
+                }
             }
         }
         return true;
     }
+
+
 }

@@ -7,6 +7,8 @@
 package Utility;
 
 import Model.GenomeAssembler;
+import Model.SampleGenome;
+import TrieSquencer.TrieRunner;
 import hashSequencer.Sequencer;
 
 /**
@@ -14,11 +16,19 @@ import hashSequencer.Sequencer;
  * @author Kris
  */
 public class RunBenchmark {
-    private static final GenomeAssembler TEST_ASSEMBLER = new Sequencer();
+    private static final GenomeAssembler TEST_ASSEMBLER = new TrieRunner();
     private static final UniversalBenchmark TEST_BENCHMARK = new UniversalBenchmark(TEST_ASSEMBLER); 
     public static void main (String [] args){
         System.out.println("Preparing to run benchmark.");
-        TEST_BENCHMARK.performBenchmark();
+        int genomeSize = 100000;
+        int readLength = 150;
+        int readOverlap = 10;
+        boolean includePairs = false;
+        boolean includeErrors = false;
+        SampleGenome testGenome = SampleGenomeFactory.buildSampleGenome(genomeSize, readLength, readOverlap, includeErrors, includePairs);
+        
+        TEST_BENCHMARK.performBenchmarkWithGenome(testGenome);
+        
         System.out.println("Benchmark complete.");
     }
 }

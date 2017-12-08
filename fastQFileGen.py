@@ -2,6 +2,7 @@
 
 import sys
 from random import choice
+from numpy.random import np
 import uuid
 
 def randomNuc(DNALength):
@@ -12,8 +13,21 @@ def randomNuc(DNALength):
 
 def qualityRead(Length):
     quality = ""
+    choices = []
+    # probabilities = []
+    # probability = 1.0/95
+    # probSum = probability
+    # elements = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+    # for s in elements:
+    #     print (s + " " + str(probability))
+    #     choices.append(s)
+    #     probabilities.append(probability)
+    #     # probability += 
+    #     probSum += probability
+    # print (probSum)
+    # return np.random.choice(choices, p=probabilities)
     for count in range(int(Length)):
-        quality += choice(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~")
+        quality += choice("!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~")
     return quality    
         
 def makePairedReads(output, DNALength, kLength, gap):

@@ -34,6 +34,9 @@ public class GenericSequencer {
         if(args[0].toLowerCase().equals("hash")){
             assembler = new Sequencer();
         }
+        else if(args[0].toLowerCase().equals("euler")){
+          //  assembler = new EulerianSequencer();
+        }
         else{
             //PUT YOUR ELSES BEFORE THIS ONE!
             System.out.println("Invalid algorithm selection.");
