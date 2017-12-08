@@ -17,6 +17,21 @@ import java.util.*;
  */
 public class EulerianSequencer implements GenomeAssembler {
 
+    /*
+    The main problem here seems to be that we're going to only really form one Eulerian cycle,
+    since, when we miss a pair coming up next, we'll continue building something. But we can't
+    check if we SHOULD keep going until we we use everything possible and see that it doesn't work--
+    and then we'd return back and have no idea which one didn't lead to a cycle.
+
+    So we have to just keep building up bubbles from the unknown breaks, but that is just the same problem.
+    Even if we eliminate all errors--which we can't guarantee--if we still need to possibly continue on
+    something, we will, and we'll run into essentially the same error. Unless we guarantee that we have no errors,
+    forming those cycles will ruin what we've got. And yet we can't gaurantee no errors, and either one
+    produces the same problem.
+
+    We COULD possibly attempt to run the same thing over and over again, hoping that eventually we run into something with less error,
+    but it STILL has the same errors in its ouput.
+     */
 
     public static TreeMap<DoubleString, ArrayList<DoubleStringAndBool>> theEdgesMap = new TreeMap<>();
     public static ArrayList<DoubleString> formCycleList = new ArrayList<>();
@@ -37,11 +52,12 @@ public class EulerianSequencer implements GenomeAssembler {
          * 4. Continue forming Eulerian cycles
          * 5. Return output
          */
-
+        double ERROR_THRESHOLD = 0.8;
+        sequences = removeSequencesWithError(sequences, ERROR_THRESHOLD);
 
         //ArrayList<String> associations = formatFastqIntoRosalindPairs(args);
 
-        ArrayList<String> associations = formatSequencesIntoRosalindPairs(sequences); //todo: this is where you'll make the distinction between getting args and getting sequences!
+        ArrayList<String> associations = formatSequencesIntoRosalindPairs(sequences);
 
 
         DoubleString startStrings = findStartString(associations);
@@ -72,6 +88,29 @@ public class EulerianSequencer implements GenomeAssembler {
 
     }
 
+
+    public static ArrayList<Sequence> removeSequencesWithError(ArrayList<Sequence> sequences, double error)
+    {
+        ArrayList<Sequence> passedSequences = new ArrayList<>();
+        for(int i = 0; i < sequences.size(); i++)
+        {
+            if(accuracyHighEnough(sequences.get(i), error))
+            {
+                passedSequences.add(sequences.get(i));
+            }
+        }
+        return passedSequences;
+    }
+
+    public static boolean accuracyHighEnough(Sequence theSequence, double error)
+    {
+        //todo: check the accuracy!
+        return true;
+    }
+
+
+
+
     /**
      * This function will need to grab all the sequences given and put them into pairs that are formatted similar to the
      * file in Bioinformatics Algorithm's format (e.g. "ACG|GTT\nGTA|TCC")
@@ -83,7 +122,7 @@ public class EulerianSequencer implements GenomeAssembler {
     {
         ArrayList<String> finalReturnList = new ArrayList<>();
 
-        //todo: deal with repeats!
+        //todo: deal with repeats! Take out errored reads
         finalReturnList = returnRosalindFormattedStringsFromSequenceObjects(sequences);
 
 
@@ -687,8 +726,7 @@ public class EulerianSequencer implements GenomeAssembler {
     }
 
 
-    //todo: also investigate just going near the map. It should be stored in "alphabetical" order, but your own comparator might not take into account
-    //todo: you should be checking scores for differently sized prefixes and suffixes! Loop through and check ones of different lengths.
+
     /**
      * This function attempts to calculate the differences between the DoubleStrings passed in.
      * This means it has to account for differently sized Strings, different individual pairs, or shifted Strings that otherwise match.
@@ -696,6 +734,17 @@ public class EulerianSequencer implements GenomeAssembler {
      * First, if one String contains the other's prefix or suffix (so that a read got an extra char) they'll only get a difference score of one.
      * If this isn't the case, however, the function just compares each char at every index, adding 1 for every different char.
      * This means that if one DoubleString has two shifts but is otherwise exactly the same, it won't be scored as similar.
+     *
+     * There is also commented code that checks if any size of String in one DoubleString's contents are found within another.
+     * However, because this is an n^2 operation in a method that will be called n^2 times, the code runs far too slowly
+     * and the higher error is traded off for a much quicker performance (operations that take less than a second without
+     * this code took several minutes with it).
+     *
+     * It should also be noted that this function does not just use a comparator between Strings--that kind of comparison
+     * (which could be taken advantage of by just iterating through the TreeMap's keySet in theEdgesMap)
+     * does not take the prefix or suffix comparison into account, and thereby would only compare Strings in terms
+     * of alphabetical order.
+     *
      * @param first
      * @param second
      * @return
@@ -709,18 +758,14 @@ public class EulerianSequencer implements GenomeAssembler {
         String secondTop = second.getString1();
 
         if(!firstTop.equals(secondTop)) {
-
-            //todo: test what's below, down to the comments comparing bestContainer to topDifference. You may just be able to
-            //take out what's below this and go straight to always measuring the topDifferences.
-            //Then apply this to the bottomDifferences too.
-            /*double bestContainer = 0;
+            /*int bestContainer = Integer.MAX_VALUE;
             for(int i = 0; i < firstTop.length(); i++)
             {
                 for(int j = i; j < firstTop.length(); j++)
                 {
-                    if(j - i > bestContainer) {
+                    if(secondTop.length() - (j - i) < bestContainer) {
                         String cutString = firstTop.substring(i, j);
-                        if (secondTop.contains(firstTop))
+                        if (secondTop.contains(cutString))
                         {
                             bestContainer = secondTop.length() - cutString.length(); // contains the lowest amount of differences found.
                         }
@@ -728,13 +773,6 @@ public class EulerianSequencer implements GenomeAssembler {
                 }
 
             }*/
-
-            /*
-            if(bestContainer < topDifferences)
-            {
-                topDifferences = bestContainer;
-            }
-             */
 
             String firstTopPre = firstTop.substring(0, firstTop.length() - 1);
             String firstTopSuf = firstTop.substring(1, firstTop.length());
@@ -749,8 +787,7 @@ public class EulerianSequencer implements GenomeAssembler {
                 suffixOrPrefixHeld = true;
             }
 
-            if (!suffixOrPrefixHeld) { //if there's not a perfect match inside (there wasn't just one shift) count all differences
-
+            if(!suffixOrPrefixHeld) {
                 for (int i = 0; i < firstTop.length(); i++) {
                     if (secondTop.length() <= i) {
                         break;
@@ -759,9 +796,14 @@ public class EulerianSequencer implements GenomeAssembler {
                         //TWO characters, then its difference score will still be the number of characters in a string
                     }
                 }
-
             }
+
+
             topDifferences += Math.abs(firstTop.length() - secondTop.length());
+            /*if(bestContainer < topDifferences)
+            {
+                topDifferences = bestContainer;
+            }*/
         }
 
 
@@ -770,6 +812,21 @@ public class EulerianSequencer implements GenomeAssembler {
         String firstBottom = first.getString2();
         String secondBottom = second.getString2();
         if(!firstBottom.equals(secondBottom)) {
+            /*int bestContainer = Integer.MAX_VALUE;
+            for(int i = 0; i < firstBottom.length(); i++)
+            {
+                for(int j = i; j < firstBottom.length(); j++)
+                {
+                    if(secondBottom.length() - (j - i) < bestContainer) {
+                        String cutString = firstBottom.substring(i, j);
+                        if (secondBottom.contains(cutString))
+                        {
+                            bestContainer = secondBottom.length() - cutString.length(); // contains the lowest amount of differences found.
+                        }
+                    }
+                }
+
+            }*/
 
             String firstBottomPre = firstBottom.substring(0, firstTop.length() - 1);
             String firstBottomSuf = firstBottom.substring(1, firstTop.length());
@@ -784,8 +841,8 @@ public class EulerianSequencer implements GenomeAssembler {
                 suffixOrPrefixHeld = true;
             }
 
-            if (!suffixOrPrefixHeld) { //if there's not a perfect match inside (there wasn't just a shift) count all differences
 
+            if(!suffixOrPrefixHeld) {
                 for (int i = 0; i < firstBottom.length(); i++) {
                     if (secondBottom.length() <= i) {
                         break;
@@ -794,9 +851,15 @@ public class EulerianSequencer implements GenomeAssembler {
                         //TWO characters, then its difference score will still be the number of characters in a string
                     }
                 }
-
             }
+
+
             bottomDifferences += Math.abs(firstBottom.length() - secondBottom.length());
+
+            /*if(bestContainer < bottomDifferences)
+            {
+                bottomDifferences = bestContainer;
+            }*/
         }
         return (topDifferences + bottomDifferences);
     }
