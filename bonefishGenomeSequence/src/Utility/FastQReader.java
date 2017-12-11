@@ -1,8 +1,8 @@
-package src.Utility;
+package Utility;
 
-import src.Model.Sequence;
-import src.Model.SequencePair;
-import src.hashSequencer.SimpleSequencePair;
+import Model.Sequence;
+import Model.SequencePair;
+import hashSequencer.SimpleSequencePair;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;

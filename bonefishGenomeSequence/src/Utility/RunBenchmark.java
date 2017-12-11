@@ -4,12 +4,12 @@
  * and open the template in the editor.
  */
 
-package src.Utility;
+package Utility;
 
-import src.Model.GenomeAssembler;
-import src.Model.SampleGenome;
-import src.TrieSquencer.TrieRunner;
-import src.hashSequencer.Sequencer;
+import Model.GenomeAssembler;
+import Model.SampleGenome;
+import TrieSquencer.TrieRunner;
+import hashSequencer.Sequencer;
 
 /**
  *

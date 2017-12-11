@@ -1,7 +1,7 @@
-package src.Utility;
+package Utility;
 
-import src.Model.Sequence;
-import src.Model.SequencePair;
+import Model.Sequence;
+import Model.SequencePair;
 
 /**
  *

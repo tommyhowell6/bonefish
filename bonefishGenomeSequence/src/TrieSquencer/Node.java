@@ -1,4 +1,4 @@
-package src.TrieSquencer;
+package TrieSquencer;
 
 /**
  * Created by tommyhowell on 11/14/17.

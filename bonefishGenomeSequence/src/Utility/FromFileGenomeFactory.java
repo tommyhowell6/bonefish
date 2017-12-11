@@ -1,4 +1,4 @@
-package src.Utility;
+package Utility;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -8,8 +8,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import src.Model.SampleGenome;
-import src.Model.Sequence;
+import Model.SampleGenome;
+import Model.Sequence;
 
 /**
  * Created by tommyhowell on 12/8/17.

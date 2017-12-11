@@ -1,8 +1,8 @@
-package src.Utility;
+package Utility;
 
-import src.Model.GenomeAssembler;
-import src.Model.SampleGenome;
-import src.Model.Sequence;
+import Model.GenomeAssembler;
+import Model.SampleGenome;
+import Model.Sequence;
 import java.util.ArrayList;
 
 /**

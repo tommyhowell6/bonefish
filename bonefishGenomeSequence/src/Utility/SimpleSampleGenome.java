@@ -4,10 +4,10 @@
  * and open the template in the editor.
  */
 
-package src.Utility;
+package Utility;
 
-import src.Model.SampleGenome;
-import src.Model.Sequence;
+import Model.SampleGenome;
+import Model.Sequence;
 import java.util.Collection;
 
 /**
