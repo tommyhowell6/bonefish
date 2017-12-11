@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package Utility;
+package src.Utility;
 
 /**
  *  Decides what to do with a paired read. One of these behaviors is likely to be incredibly stupid.

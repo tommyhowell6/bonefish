@@ -1,8 +1,8 @@
-package Utility;
+package src.Utility;
 
-import Model.GenomeAssembler;
-import Model.Sequence;
-import hashSequencer.Sequencer;
+import src.Model.GenomeAssembler;
+import src.Model.Sequence;
+import src.hashSequencer.Sequencer;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;

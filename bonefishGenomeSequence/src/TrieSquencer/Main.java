@@ -1,4 +1,4 @@
-package TrieSquencer;
+package src.TrieSquencer;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;

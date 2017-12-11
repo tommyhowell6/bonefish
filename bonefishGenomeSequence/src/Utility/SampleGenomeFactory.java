@@ -1,7 +1,7 @@
-package Utility;
+package src.Utility;
 
-import Model.SampleGenome;
-import Model.Sequence;
+import src.Model.SampleGenome;
+import src.Model.Sequence;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Random;

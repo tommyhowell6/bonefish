@@ -1,4 +1,4 @@
-package TrieSquencer;
+package src.TrieSquencer;
 
 
 /**
@@ -14,7 +14,6 @@ public class GenomeSequencer
         //R is for root. This should not ever get read
         root = new Node('R');
     }
-
 
     public void addNode(String s)
     {

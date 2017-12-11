@@ -3,11 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package TrieSquencer;
+package src.TrieSquencer;
 
-import Model.GenomeAssembler;
-import Model.Sequence;
-import Utility.SequenceFactory;
+import src.Model.GenomeAssembler;
+import src.Model.Sequence;
+import src.Utility.SequenceFactory;
+import src.TrieSquencer.GenomeSequencer;
+
 import java.util.ArrayList;
 import java.util.List;
 

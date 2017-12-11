@@ -3,10 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package Utility;
+package src.Utility;
 
-import Model.Sequence;
-import Model.SequencePair;
+import src.Model.Sequence;
+import src.Model.SequencePair;
 
 /**
  *

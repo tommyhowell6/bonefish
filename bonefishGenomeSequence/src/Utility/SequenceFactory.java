@@ -4,10 +4,10 @@
  * and open the template in the editor.
  */
 
-package Utility;
+package src.Utility;
 
-import Model.Sequence;
-import hashSequencer.SimpleSequence;
+import src.Model.Sequence;
+import src.hashSequencer.SimpleSequence;
 
 /**
  * This class is a simple way to change the way sequences are created in our program.
