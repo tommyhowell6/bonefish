@@ -76,16 +76,9 @@ public class UniversalBenchmark {
             }
             
             double coverage = (double)contained/(double)finalGenome.length();
-            if(coverage<1){
-                System.out.println("Genome coverage = "+coverage);
-            }
-            else{
-                System.out.println("Genome incorrectly assembled. No accuracy reading is possible.");
-            }
-			if(output.size() == 1) {
-                double correctRatio = getCorrectRatio(output.get(0).getBases(), finalGenome);
-                System.out.println("Ratio of genome bases correct within first output Sequence: " + correctRatio);
-            }
+                System.out.println("Attempting coverage test.");
+                String out = GenomeAccuracyCalculator.calculateCoverage(genome.getGenome(), output);
+                System.out.println(out);
         }
         
         return time;
@@ -124,7 +117,7 @@ public class UniversalBenchmark {
      * @param finalGenome
      * @return
      */
-    private double getCorrectRatio(String onlyOutput, String finalGenome) {
+    private double coverageTest(String onlyOutput, String finalGenome) {
         ArrayList<String> cyclicRotations = new ArrayList<>();
 
         for(int i = 0; i < finalGenome.length(); i++)

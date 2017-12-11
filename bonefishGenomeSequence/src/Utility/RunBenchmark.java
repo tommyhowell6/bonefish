@@ -32,5 +32,4 @@ public class RunBenchmark {
         
         System.out.println("Benchmark complete.");
     }
-    
 }

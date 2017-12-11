@@ -119,15 +119,4 @@ public class SimpleMerger implements SequenceMerger{
         return output;
     }
     
-    /**
-     * Simple container class to be used to pass sequences around internally.
-     */
-    class SequenceProbabilityPair{
-        public SequenceProbabilityPair(String base,String acc){
-            bases = base;
-            accuracy = acc;
-        }
-        String bases;
-        String accuracy;
-    }
 }
