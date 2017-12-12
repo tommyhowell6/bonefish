@@ -17,39 +17,6 @@ public class Node
         numberOfChildren = 0;
     }
 
-    public boolean deletePath(String s)
-    {
-        if(s.length() == 1)
-        {
-            if(children == null)
-            {
-                return true;
-            }
-        }
-        else
-        {
-            switch (s.toUpperCase().charAt(0))
-            {
-                case 'A':
-                    if (children[0] != null)
-                    {
-                        if (deletePath(s.substring(1)))
-                        {
-
-                        }
-                    }
-                    break;
-                case 'C':
-
-                    break;
-                case 'G':
-                    break;
-                case 'T':
-                    break;
-            }
-        }
-        return false;
-    }
 
     public void add(String s)
     {
@@ -149,36 +116,40 @@ public class Node
         return numberOfChildren;
     }
 
-    public Node getChild(char c)
+    public NodeHolder getChild(char c)
     {
+        if(children == null)
+        {
+            return new NodeHolder(id + " had no children in getChild");
+        }
         switch (c)
         {
             case 'A':
                 if(children[0] != null)
                 {
-                    return children[0];
+                    return new NodeHolder(children[0]);
                 }
                 break;
             case 'C':
                 if(children[1] != null)
                 {
-                    return children[1];
+                    return new NodeHolder(children[1]);
                 }
                 break;
             case 'G':
                 if(children[2] != null)
                 {
-                    return children[2];
+                    return new NodeHolder(children[2]);
                 }
                 break;
             case 'T':
                 if(children[3] != null)
                 {
-                    return children[3];
+                    return new NodeHolder(children[3]);
                 }
                 break;
         }
-        return null;
+        return new NodeHolder(id + " did not have child " + c + " in getChild");
     }
 
     public char getId()
@@ -192,20 +163,25 @@ public class Node
     }
 
 
-    public Node getOnlyChild()
+    public NodeHolder getOnlyChild()
     {
-            if(children == null)
+        if(children == null)
+        {
+            return new NodeHolder(id + " had no children in getOnlyChild");
+        }
+        else if(numberOfChildren != 1)
+        {
+            return new NodeHolder(id + " had more than one child in getOnlyChild");
+        }
+        for (int i = 0; i < 4; i++)
+        {
+            if(children[i] != null)
             {
-                return null;
+                return new NodeHolder(children[i]);
             }
-            for (int i = 0; i < 4; i++)
-            {
-                if(children[i] != null)
-                {
-                    return children[i];
-                }
-            }
-            return null;
+        }
+        return new NodeHolder(id + " reached end of getOnlyChild");
     }
 
 }
+

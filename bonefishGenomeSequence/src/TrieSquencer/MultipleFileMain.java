@@ -24,45 +24,60 @@ public class MultipleFileMain
     {
         try
         {
+            GenomeSequencer genomeSequencer = new GenomeSequencer();
+            List<String> potentialStarts = new ArrayList<>();
             FileInputStream fStream = new FileInputStream(FILE_NAME);
             BufferedReader br = new BufferedReader(new InputStreamReader(fStream));
             String fastQFile;
+            FileInputStream fastQFStream;
+            BufferedReader fastQBR;
             while ((fastQFile = br.readLine()) != null)
             {
-                FileInputStream fastQFStream = new FileInputStream(fastQFile);
-                BufferedReader fastQBR = new BufferedReader(new InputStreamReader(fastQFStream));
+                fastQFStream = new FileInputStream(fastQFile);
+                fastQBR = new BufferedReader(new InputStreamReader(fastQFStream));
 
-                GenomeSequencer genomeSequencer = new GenomeSequencer();
                 String id;
                 while((id = fastQBR.readLine()) != null)
                 {
                     genomeSequencer.addNode(parseRead(fastQBR));
                 }
                 fastQBR.close();
+            }
+            br.close();
 
+            fStream = new FileInputStream(FILE_NAME);
+            br = new BufferedReader(new InputStreamReader(fStream));
+
+            while ((fastQFile = br.readLine()) != null)
+            {
                 fastQFStream = new FileInputStream(fastQFile);
                 fastQBR = new BufferedReader(new InputStreamReader(fastQFStream));
 
-                List<String> potentialStarts = new ArrayList<>();
-                while((id = fastQBR.readLine()) != null)
+                String id;
+                while ((id = fastQBR.readLine()) != null)
                 {
                     String potentialStart = parseRead(fastQBR);
-                    if(genomeSequencer.prefixNotInTrie(potentialStart))
+                    if (genomeSequencer.prefixNotInTrie(potentialStart))
                     {
                         potentialStarts.add(potentialStart);
                     }
                     //could add some optimization here
                 }
                 fastQBR.close();
-
-                Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(OUT_FILE_NAME), "utf-8"));
-
-                for (String potentialStart : potentialStarts)
-                {
-                    writer.write(genomeSequencer.runStartAgainstTrie(potentialStart) + "\n");
-                }
-                writer.close();
             }
+            br.close();
+
+            Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(OUT_FILE_NAME), "utf-8"));
+
+            for (String potentialStart : potentialStarts)
+            {
+                SequenceHolder sequenceHolder = genomeSequencer.runStartAgainstTrie(potentialStart);
+                if(!sequenceHolder.isError())
+                {
+                    writer.write(sequenceHolder.getSequence() + "\n");
+                }
+            }
+            writer.close();
 
         } catch (IOException e)
         {
